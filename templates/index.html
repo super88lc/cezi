@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>字测算 - AI智能测字</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --gold: #f59e0b;
+            --gold-light: #fbbf24;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--text);
+            line-height: 1.5;
+        }
+        
+        .app {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+            padding-bottom: 80px;
+        }
+        
+        /* 头部 */
+        .header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            background: linear-gradient(180deg, rgba(99,102,241,0.15) 0%, transparent 100%);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        
+        /* 输入卡片 */
+        .card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 24px;
+            margin: 0 16px 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .char-input {
+            width: 100%;
+            height: 100px;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid rgba(99,102,241,0.3);
+            border-radius: 16px;
+            color: var(--gold);
+            font-size: 48px;
+            text-align: center;
+            outline: none;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .char-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(99,102,241,0.2);
+        }
+        
+        .char-input::placeholder {
+            color: rgba(255,255,255,0.15);
+            font-size: 18px;
+        }
+        
+        .input-tools {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        
+        .tool-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px;
+            background: rgba(99,102,241,0.1);
+            border: 1px dashed rgba(99,102,241,0.3);
+            border-radius: 12px;
+            color: var(--primary-light);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tool-btn:active {
+            transform: scale(0.98);
+            background: rgba(99,102,241,0.2);
+        }
+        
+        .question-input {
+            width: 100%;
+            margin-top: 16px;
+            padding: 14px 16px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 15px;
+            outline: none;
+        }
+        
+        .question-input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        /* 按钮 */
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* 结果 */
+        .result {
+            display: none;
+            animation: slideUp 0.4s ease;
+        }
+        
+        .result.show {
+            display: block;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .result-header {
+            text-align: center;
+            padding: 20px 0;
+        }
+        
+        .result-char {
+            font-size: 72px;
+            color: var(--gold);
+            text-shadow: 0 0 30px rgba(245,158,11,0.4);
+            margin-bottom: 16px;
+            animation: fadeIn 0.5s ease 0.2s both;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .result-tags {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            padding: 6px 14px;
+            background: rgba(99,102,241,0.15);
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--primary-light);
+        }
+        
+        .tag.gold {
+            background: rgba(245,158,11,0.15);
+            border-color: rgba(245,158,11,0.3);
+            color: var(--gold-light);
+        }
+        
+        .result-section {
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .result-section:last-child {
+            border-bottom: none;
+        }
+        
+        .result-section h3 {
+            color: var(--gold);
+            font-size: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .result-section p {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            border: 1px solid rgba(255,255,0.1);
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 16px;
+            cursor: pointer;
+        }
+        
+        /* 会员提示 */
+        .vip-banner {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 16px;
+            text-align: center;
+        }
+        
+        .vip-banner h3 {
+            color: white;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .vip-banner p {
+            color: rgba(255,255,255,0.8);
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+        
+        .vip-btn {
+            background: var(--gold);
+            color: #000;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        /* 加载 */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+        
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(99,102,241,0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        
+        /* 底部导航 */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            background: rgba(15,23,42,0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 0 24px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .tab-item {
+            flex: 1;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 11px;
+            cursor: pointer;
+        }
+        
+        .tab-item.active {
+            color: var(--primary-light);
+        }
+        
+        .tab-icon {
+            font-size: 22px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        /* 弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 360px;
+            width: 100%;
+            animation: modalIn 0.3s ease;
+        }
+        
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .modal-content h3 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        /* 会员页 */
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .page-header {
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .page-header h2 {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+        
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+        
+        .plan-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 0 16px 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .plan-card:active {
+            transform: scale(0.98);
+        }
+        
+        .plan-card.selected {
+            border-color: var(--primary);
+            background: rgba(99,102,241,0.1);
+        }
+        
+        .plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .plan-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .plan-price {
+            font-size: 20px;
+            color: var(--gold);
+            font-weight: 700;
+        }
+        
+        .plan-days {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        
+        .plan-features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .plan-feature {
+            font-size: 12px;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.05);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+        
+        /* 文件上传 */
+        #fileInput {
+            display: none;
+        }
+        
+        /* 历史记录 */
+        .history-item {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 0 16px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-char {
+            font-size: 24px;
+            color: var(--gold);
+        }
+        
+        .history-brief {
+            flex: 1;
+            margin-left: 16px;
+            font-size: 13px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .history-time {
+            font-size: 12px;
+            color: rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- 首页 -->
+        <div class="page active" id="page-home">
+            <div class="header">
+                <h1>🔮 字测算</h1>
+                <p>一笔一划，洞悉天机</p>
+            </div>
+            
+            <div class="card">
+                <div class="input-wrapper">
+                    <input type="text" class="char-input" id="charInput" placeholder="请输入一个汉字" maxlength="1">
+                </div>
+                
+                <div class="input-tools">
+                    <div class="tool-btn" onclick="captureImage()">
+                        📷 拍照识字
+                    </div>
+                    <div class="tool-btn" onclick="showHistory()">
+                        📜 历史
+                    </div>
+                </div>
+                
+                <input type="text" class="question-input" id="questionInput" placeholder="想测什么事情？（可选）">
+                
+                <button class="btn-primary" id="submitBtn" onclick="startCezi()">开始测字</button>
+            </div>
+            
+            <!-- 会员提示 -->
+            <div class="vip-banner" id="vipBanner" style="display: none;">
+                <h3>开通会员 · 无限测字</h3>
+                <p>每日免费3次，会员无限次</p>
+                <button class="vip-btn" onclick="showPage('vip')">立即开通</button>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>AI 正在分析...</p>
+            </div>
+            
+            <div class="result" id="result">
+                <div class="card">
+                    <div class="result-header">
+                        <div class="result-char" id="resultChar"></div>
+                        <div class="result-tags">
+                            <span class="tag" id="resultStrokes"></span>
+                            <span class="tag" id="resultWuxing"></span>
+                            <span class="tag gold" id="resultJixiong"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>📝 简总</h3>
+                        <p id="resultBrief"></p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💼 事业</h3>
+                        <p id="resultCareer"></p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💰 财运</h3>
+                        <p id="resultWealth"></p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💕 感情</h3>
+                        <p id="resultLove"></p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💪 健康</h3>
+                        <p id="resultHealth"></p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>✨ 建议</h3>
+                        <p id="resultSuggestion"></p>
+                    </div>
+                    
+                    <button class="btn-secondary" onclick="reset()">再测一字</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 历史页 -->
+        <div class="page" id="page-history">
+            <div class="page-header">
+                <h2>📜 历史记录</h2>
+                <p>你测过的字都在这里</p>
+            </div>
+            <div id="historyList"></div>
+        </div>
+        
+        <!-- 会员页 -->
+        <div class="page" id="page-vip">
+            <div class="page-header">
+                <h2>💎 会员中心</h2>
+                <p>开通会员，无限测字</p>
+            </div>
+            
+            <div class="plan-card" onclick="selectPlan('monthly')" data-plan="monthly">
+                <div class="plan-header">
+                    <span class="plan-name">月卡会员</span>
+                    <span class="plan-price">¥30</span>
+                </div>
+                <div class="plan-days">30天</div>
+                <div class="plan-features">
+                    <span class="plan-feature">无限测字</span>
+                    <span class="plan-feature">深度分析</span>
+                </div>
+            </div>
+            
+            <div class="plan-card" onclick="selectPlan('quarterly')" data-plan="quarterly">
+                <div class="plan-header">
+                    <span class="plan-name">季卡会员</span>
+                    <span class="plan-price">¥80</span>
+                </div>
+                <div class="plan-days">90天</div>
+                <div class="plan-features">
+                    <span class="plan-feature">无限测字</span>
+                    <span class="plan-feature">深度分析</span>
+                    <span class="plan-feature">诸葛神签</span>
+                </div>
+            </div>
+            
+            <div class="plan-card" onclick="selectPlan('yearly')" data-plan="yearly">
+                <div class="plan-header">
+                    <span class="plan-name">年卡会员</span>
+                    <span class="plan-price">¥298</span>
+                </div>
+                <div class="plan-days">365天</div>
+                <div class="plan-features">
+                    <span class="plan-feature">无限测字</span>
+                    <span class="plan-feature">全部功能</span>
+                    <span class="plan-feature">专属祝福</span>
+                </div>
+            </div>
+            
+            <div class="card" style="margin-top: 20px;">
+                <button class="btn-primary" onclick="openPayment()">确认开通</button>
+            </div>
+        </div>
+        
+        <!-- 底部导航 -->
+        <div class="tab-bar">
+            <div class="tab-item active" onclick="showPage('home')" data-page="home">
+                <span class="tab-icon">🏠</span>
+                首页
+            </div>
+            <div class="tab-item" onclick="showPage('history')" data-page="history">
+                <span class="tab-icon">📜</span>
+                历史
+            </div>
+            <div class="tab-item" onclick="showPage('vip')" data-page="vip">
+                <span class="tab-icon">💎</span>
+                会员
+            </div>
+        </div>
+    </div>
+    
+    <!-- 隐藏的文件输入 -->
+    <input type="file" id="fileInput" accept="image/*" capture="environment">
+    
+    <script>
+        // API 基础URL
+        const API_BASE = '';
+        
+        // 状态
+        let currentPage = 'home';
+        let selectedPlan = null;
+        let openid = localStorage.getItem('openid') || 'guest_' + Date.now();
+        localStorage.setItem('openid', openid);
+        
+        // 页面切换
+        function showPage(page) {
+            currentPage = page;
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + page).classList.add('active');
+            
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-page="${page}"]`).classList.add('active');
+            
+            if (page === 'history') {
+                loadHistory();
+            }
+        }
+        
+        // 测字
+        async function startCezi() {
+            const char = document.getElementById('charInput').value.trim();
+            const question = document.getElementById('questionInput').value.trim();
+            
+            if (!char) {
+                alert('请输入要测的字');
+                return;
+            }
+            
+            const btn = document.getElementById('submitBtn');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            
+            btn.disabled = true;
+            loading.classList.add('show');
+            result.classList.remove('show');
+            
+            try {
+                const response = await fetch(API_BASE + '/api/cezi', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        char: char,
+                        question: question,
+                        openid: openid
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    if (data.upgrade) {
+                        document.getElementById('vipBanner').style.display = 'block';
+                    }
+                    alert(data.message || data.error);
+                    return;
+                }
+                
+                showResult(data.data);
+                
+            } catch (e) {
+                console.error(e);
+                alert('网络错误，请重试');
+            } finally {
+                btn.disabled = false;
+                loading.classList.remove('show');
+            }
+        }
+        
+        // 显示结果
+        function showResult(data) {
+            const result = document.getElementById('result');
+            
+            document.getElementById('resultChar').textContent = data.char;
+            document.getElementById('resultStrokes').textContent = data.analysis.strokes + '画';
+            document.getElementById('resultWuxing').textContent = data.analysis.wuxing + '行';
+            document.getElementById('resultJixiong').textContent = data.analysis.jixiong;
+            
+            document.getElementById('resultBrief').textContent = data.result.brief;
+            document.getElementById('resultCareer').textContent = data.result.career;
+            document.getElementById('resultWealth').textContent = data.result.wealth;
+            document.getElementById('resultLove').textContent = data.result.love;
+            document.getElementById('resultHealth').textContent = data.result.health;
+            document.getElementById('resultSuggestion').textContent = data.result.suggestion;
+            
+            result.classList.add('show');
+        }
+        
+        // 重置
+        function reset() {
+            document.getElementById('charInput').value = '';
+            document.getElementById('questionInput').value = '';
+            document.getElementById('result').classList.remove('show');
+            document.getElementById('vipBanner').style.display = 'none';
+        }
+        
+        // 拍照识字
+        function captureImage() {
+            document.getElementById('fileInput').click();
+        }
+        
+        document.getElementById('fileInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const loading = document.getElementById('loading');
+            loading.classList.add('show');
+            
+            try {
+                // 转Base64
+                const reader = new FileReader();
+                reader.onload = async function(evt) {
+                    const base64 = evt.target.result;
+                    
+                    try {
+                        const response = await fetch(API_BASE + '/api/ocr', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({image: base64})
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (data.char) {
+                            document.getElementById('charInput').value = data.char;
+                            alert('识别成功: ' + data.char);
+                        } else {
+                            alert(data.message || '未能识别文字，请手动输入');
+                        }
+                    } catch (err) {
+                        alert('OCR服务暂时不可用，请手动输入');
+                    } finally {
+                        loading.classList.remove('show');
+                    }
+                };
+                reader.readAsDataURL(file);
+                
+            } catch (err) {
+                loading.classList.remove('show');
+                alert('读取图片失败');
+            }
+        });
+        
+        // 历史记录
+        async function loadHistory() {
+            const list = document.getElementById('historyList');
+            
+            try {
+                const response = await fetch(API_BASE + '/api/user/history?openid=' + openid);
+                const data = await response.json();
+                
+                if (data.history && data.history.length > 0) {
+                    list.innerHTML = data.history.reverse().map(h => `
+                        <div class="history-item" onclick="viewHistory('${h.char}')">
+                            <span class="history-char">${h.char}</span>
+                            <span class="history-brief">${h.brief || ''}</span>
+                            <span class="history-time">${new Date(h.time * 1000).toLocaleDateString()}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px;">暂无记录</p>';
+                }
+            } catch (e) {
+                list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px;">加载失败</p>';
+            }
+        }
+        
+        function showHistory() {
+            showPage('history');
+        }
+        
+        function viewHistory(char) {
+            document.getElementById('charInput').value = char;
+            showPage('home');
+            setTimeout(() => startCezi(), 100);
+        }
+        
+        // 会员相关
+        function selectPlan(plan) {
+            selectedPlan = plan;
+            document.querySelectorAll('.plan-card').forEach(p => p.classList.remove('selected'));
+            document.querySelector(`[data-plan="${plan}"]`).classList.add('selected');
+        }
+        
+        async function openPayment() {
+            if (!selectedPlan) {
+                alert('请选择套餐');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_BASE + '/api/payment/create', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        plan: selectedPlan,
+                        openid: openid
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.message) {
+                    alert(data.message);
+                } else {
+                    alert('支付功能开发中');
+                }
+                
+            } catch (e) {
+                alert('支付服务暂时不可用');
+            }
+        }
+        
+        // 回车测字
+        document.getElementById('charInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                startCezi();
+            }
+        });
+    </script>
+</body>
+</html>
