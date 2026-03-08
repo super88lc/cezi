@@ -55,7 +55,7 @@
             font-size: 14px;
         }
         
-        /* 输入卡片 */
+        /* 卡片 */
         .card {
             background: var(--card);
             border-radius: 20px;
@@ -111,7 +111,6 @@
             color: var(--primary-light);
             font-size: 14px;
             cursor: pointer;
-            transition: all 0.2s;
         }
         
         .tool-btn:active {
@@ -135,7 +134,6 @@
             color: var(--text-muted);
         }
         
-        /* 按钮 */
         .btn-primary {
             width: 100%;
             padding: 16px;
@@ -157,129 +155,6 @@
         .btn-primary:disabled {
             opacity: 0.6;
             cursor: not-allowed;
-        }
-        
-        /* 结果 */
-        .result {
-            display: none;
-            animation: slideUp 0.4s ease;
-        }
-        
-        .result.show {
-            display: block;
-        }
-        
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .result-header {
-            text-align: center;
-            padding: 20px 0;
-        }
-        
-        .result-char {
-            font-size: 72px;
-            color: var(--gold);
-            text-shadow: 0 0 30px rgba(245,158,11,0.4);
-            margin-bottom: 16px;
-            animation: fadeIn 0.5s ease 0.2s both;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.8); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        
-        .result-tags {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        
-        .tag {
-            padding: 6px 14px;
-            background: rgba(99,102,241,0.15);
-            border: 1px solid rgba(99,102,241,0.3);
-            border-radius: 20px;
-            font-size: 13px;
-            color: var(--primary-light);
-        }
-        
-        .tag.gold {
-            background: rgba(245,158,11,0.15);
-            border-color: rgba(245,158,11,0.3);
-            color: var(--gold-light);
-        }
-        
-        .result-section {
-            padding: 20px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        
-        .result-section:last-child {
-            border-bottom: none;
-        }
-        
-        .result-section h3 {
-            color: var(--gold);
-            font-size: 15px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .result-section p {
-            color: var(--text-muted);
-            font-size: 14px;
-            line-height: 1.7;
-        }
-        
-        .btn-secondary {
-            background: rgba(255,255,255,0.05);
-            color: var(--text-muted);
-            border: 1px solid rgba(255,255,0.1);
-            padding: 14px;
-            border-radius: 12px;
-            font-size: 14px;
-            width: 100%;
-            margin-top: 16px;
-            cursor: pointer;
-        }
-        
-        /* 会员提示 */
-        .vip-banner {
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            border-radius: 16px;
-            padding: 20px;
-            margin: 16px;
-            text-align: center;
-        }
-        
-        .vip-banner h3 {
-            color: white;
-            font-size: 16px;
-            margin-bottom: 8px;
-        }
-        
-        .vip-banner p {
-            color: rgba(255,255,255,0.8);
-            font-size: 13px;
-            margin-bottom: 12px;
-        }
-        
-        .vip-btn {
-            background: var(--gold);
-            color: #000;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
         }
         
         /* 加载 */
@@ -312,6 +187,159 @@
             font-size: 14px;
         }
         
+        /* 结果弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: modalIn 0.4s ease;
+            position: relative;
+        }
+        
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.9) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        .result-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .result-char {
+            font-size: 64px;
+            color: var(--gold);
+            text-shadow: 0 0 30px rgba(245,158,11,0.4);
+            margin-bottom: 12px;
+        }
+        
+        .result-question {
+            color: var(--primary-light);
+            font-size: 14px;
+            margin-bottom: 16px;
+            padding: 8px 16px;
+            background: rgba(99,102,241,0.15);
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .result-tags {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .tag {
+            padding: 6px 14px;
+            background: rgba(99,102,241,0.15);
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--primary-light);
+        }
+        
+        .tag.gold {
+            background: rgba(245,158,11,0.15);
+            border-color: rgba(245,158,11,0.3);
+            color: var(--gold-light);
+        }
+        
+        .result-section {
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .result-section:last-child {
+            border-bottom: none;
+        }
+        
+        .result-section h3 {
+            color: var(--gold);
+            font-size: 15px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .result-section p {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-muted);
+            border: 1px solid rgba(255,255,0.1);
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 16px;
+            cursor: pointer;
+        }
+        
+        /* 会员提示 */
+        .vip-tip {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 16px;
+            text-align: center;
+        }
+        
+        .vip-tip h3 { color: white; font-size: 16px; margin-bottom: 8px; }
+        .vip-tip p { color: rgba(255,255,255,0.8); font-size: 13px; margin-bottom: 12px; }
+        .vip-btn {
+            background: var(--gold);
+            color: #000;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
         /* 底部导航 */
         .tab-bar {
             position: fixed;
@@ -333,9 +361,7 @@
             cursor: pointer;
         }
         
-        .tab-item.active {
-            color: var(--primary-light);
-        }
+        .tab-item.active { color: var(--primary-light); }
         
         .tab-icon {
             font-size: 22px;
@@ -343,64 +369,9 @@
             margin-bottom: 4px;
         }
         
-        /* 弹窗 */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            z-index: 100;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .modal.show {
-            display: flex;
-        }
-        
-        .modal-content {
-            background: var(--card);
-            border-radius: 20px;
-            padding: 24px;
-            max-width: 360px;
-            width: 100%;
-            animation: modalIn 0.3s ease;
-        }
-        
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        
-        .modal-content h3 {
-            font-size: 18px;
-            margin-bottom: 16px;
-            text-align: center;
-        }
-        
-        .modal-close {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 24px;
-            cursor: pointer;
-        }
-        
         /* 会员页 */
-        .page {
-            display: none;
-        }
-        
-        .page.active {
-            display: block;
-        }
+        .page { display: none; }
+        .page.active { display: block; }
         
         .page-header {
             padding: 30px 20px;
@@ -424,11 +395,6 @@
             margin: 0 16px 12px;
             border: 1px solid rgba(255,255,255,0.05);
             cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .plan-card:active {
-            transform: scale(0.98);
         }
         
         .plan-card.selected {
@@ -443,21 +409,9 @@
             margin-bottom: 8px;
         }
         
-        .plan-name {
-            font-size: 16px;
-            font-weight: 600;
-        }
-        
-        .plan-price {
-            font-size: 20px;
-            color: var(--gold);
-            font-weight: 700;
-        }
-        
-        .plan-days {
-            color: var(--text-muted);
-            font-size: 13px;
-        }
+        .plan-name { font-size: 16px; font-weight: 600; }
+        .plan-price { font-size: 20px; color: var(--gold); font-weight: 700; }
+        .plan-days { color: var(--text-muted); font-size: 13px; }
         
         .plan-features {
             display: flex;
@@ -474,12 +428,9 @@
             border-radius: 12px;
         }
         
-        /* 文件上传 */
-        #fileInput {
-            display: none;
-        }
+        #fileInput { display: none; }
         
-        /* 历史记录 */
+        /* 历史 */
         .history-item {
             background: var(--card);
             border-radius: 12px;
@@ -490,10 +441,7 @@
             align-items: center;
         }
         
-        .history-char {
-            font-size: 24px;
-            color: var(--gold);
-        }
+        .history-char { font-size: 24px; color: var(--gold); }
         
         .history-brief {
             flex: 1;
@@ -509,6 +457,18 @@
             font-size: 12px;
             color: rgba(255,255,255,0.3);
         }
+        
+        /* 笔迹分析提示 */
+        .handwriting-tip {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 12px;
+            padding: 10px;
+            background: rgba(245,158,11,0.1);
+            border-radius: 8px;
+            border: 1px dashed rgba(245,158,11,0.3);
+        }
     </style>
 </head>
 <body>
@@ -522,25 +482,28 @@
             
             <div class="card">
                 <div class="input-wrapper">
-                    <input type="text" class="char-input" id="charInput" placeholder="请输入一个汉字" maxlength="1">
+                    <input type="text" class="char-input" id="charInput" placeholder="请写一个汉字" maxlength="1">
                 </div>
                 
                 <div class="input-tools">
                     <div class="tool-btn" onclick="captureImage()">
-                        📷 拍照识字
+                        📷 拍照识别
                     </div>
-                    <div class="tool-btn" onclick="showHistory()">
-                        📜 历史
+                    <div class="tool-btn" onclick="showPage('history')">
+                        📜 记录
                     </div>
                 </div>
                 
-                <input type="text" class="question-input" id="questionInput" placeholder="想测什么事情？（可选）">
+                <input type="text" class="question-input" id="questionInput" placeholder="想测什么事情？（如：事业、财运、感情）">
                 
                 <button class="btn-primary" id="submitBtn" onclick="startCezi()">开始测字</button>
+                
+                <div class="handwriting-tip">
+                    💡 笔迹力度、走势、布局皆含天机，AI会综合分析
+                </div>
             </div>
             
-            <!-- 会员提示 -->
-            <div class="vip-banner" id="vipBanner" style="display: none;">
+            <div class="vip-tip" id="vipBanner" style="display: none;">
                 <h3>开通会员 · 无限测字</h3>
                 <p>每日免费3次，会员无限次</p>
                 <button class="vip-btn" onclick="showPage('vip')">立即开通</button>
@@ -548,59 +511,14 @@
             
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p>AI 正在分析...</p>
-            </div>
-            
-            <div class="result" id="result">
-                <div class="card">
-                    <div class="result-header">
-                        <div class="result-char" id="resultChar"></div>
-                        <div class="result-tags">
-                            <span class="tag" id="resultStrokes"></span>
-                            <span class="tag" id="resultWuxing"></span>
-                            <span class="tag gold" id="resultJixiong"></span>
-                        </div>
-                    </div>
-                    
-                    <div class="result-section">
-                        <h3>📝 简总</h3>
-                        <p id="resultBrief"></p>
-                    </div>
-                    
-                    <div class="result-section">
-                        <h3>💼 事业</h3>
-                        <p id="resultCareer"></p>
-                    </div>
-                    
-                    <div class="result-section">
-                        <h3>💰 财运</h3>
-                        <p id="resultWealth"></p>
-                    </div>
-                    
-                    <div class="result-section">
-                        <h3>💕 感情</h3>
-                        <p id="resultLove"></p>
-                    </div>
-                    
-                    <div class="result-section">
-                        <h3>💪 健康</h3>
-                        <p id="resultHealth"></p>
-                    </div>
-                    
-                    <div class="result-section">
-                        <h3>✨ 建议</h3>
-                        <p id="resultSuggestion"></p>
-                    </div>
-                    
-                    <button class="btn-secondary" onclick="reset()">再测一字</button>
-                </div>
+                <p>AI 正在分析笔迹与字义...</p>
             </div>
         </div>
         
         <!-- 历史页 -->
         <div class="page" id="page-history">
             <div class="page-header">
-                <h2>📜 历史记录</h2>
+                <h2>📜 测字记录</h2>
                 <p>你测过的字都在这里</p>
             </div>
             <div id="historyList"></div>
@@ -664,7 +582,7 @@
             </div>
             <div class="tab-item" onclick="showPage('history')" data-page="history">
                 <span class="tab-icon">📜</span>
-                历史
+                记录
             </div>
             <div class="tab-item" onclick="showPage('vip')" data-page="vip">
                 <span class="tab-icon">💎</span>
@@ -673,14 +591,65 @@
         </div>
     </div>
     
-    <!-- 隐藏的文件输入 -->
+    <!-- 结果弹窗 -->
+    <div class="modal-overlay" id="resultModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            
+            <div class="result-header">
+                <div class="result-char" id="resultChar"></div>
+                <div class="result-question" id="resultQuestion"></div>
+                <div class="result-tags">
+                    <span class="tag" id="resultStrokes"></span>
+                    <span class="tag" id="resultWuxing"></span>
+                    <span class="tag" id="resultStructure"></span>
+                    <span class="tag gold" id="resultJixiong"></span>
+                </div>
+            </div>
+            
+            <div class="result-section">
+                <h3>📝 综合分析</h3>
+                <p id="resultBrief"></p>
+            </div>
+            
+            <div class="result-section">
+                <h3>✍️ 笔迹解读</h3>
+                <p id="resultHandwriting"></p>
+            </div>
+            
+            <div class="result-section">
+                <h3>💼 事业</h3>
+                <p id="resultCareer"></p>
+            </div>
+            
+            <div class="result-section">
+                <h3>💰 财运</h3>
+                <p id="resultWealth"></p>
+            </div>
+            
+            <div class="result-section">
+                <h3>💕 感情</h3>
+                <p id="resultLove"></p>
+            </div>
+            
+            <div class="result-section">
+                <h3>💪 健康</h3>
+                <p id="resultHealth"></p>
+            </div>
+            
+            <div class="result-section">
+                <h3>✨ 开运建议</h3>
+                <p id="resultSuggestion"></p>
+            </div>
+            
+            <button class="btn-secondary" onclick="closeModal(); reset();">再测一字</button>
+        </div>
+    </div>
+    
     <input type="file" id="fileInput" accept="image/*" capture="environment">
     
     <script>
-        // API 基础URL
         const API_BASE = '';
-        
-        // 状态
         let currentPage = 'home';
         let selectedPlan = null;
         let openid = localStorage.getItem('openid') || 'guest_' + Date.now();
@@ -695,9 +664,7 @@
             document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
             document.querySelector(`[data-page="${page}"]`).classList.add('active');
             
-            if (page === 'history') {
-                loadHistory();
-            }
+            if (page === 'history') loadHistory();
         }
         
         // 测字
@@ -712,11 +679,9 @@
             
             const btn = document.getElementById('submitBtn');
             const loading = document.getElementById('loading');
-            const result = document.getElementById('result');
             
             btn.disabled = true;
             loading.classList.add('show');
-            result.classList.remove('show');
             
             try {
                 const response = await fetch(API_BASE + '/api/cezi', {
@@ -732,14 +697,13 @@
                 const data = await response.json();
                 
                 if (!response.ok) {
-                    if (data.upgrade) {
-                        document.getElementById('vipBanner').style.display = 'block';
-                    }
+                    if (data.upgrade) document.getElementById('vipBanner').style.display = 'block';
                     alert(data.message || data.error);
                     return;
                 }
                 
-                showResult(data.data);
+                // 直接显示弹窗结果
+                showResultModal(data.data, question);
                 
             } catch (e) {
                 console.error(e);
@@ -750,30 +714,125 @@
             }
         }
         
-        // 显示结果
-        function showResult(data) {
-            const result = document.getElementById('result');
+        // 显示结果弹窗
+        function showResultModal(data, question) {
+            const modal = document.getElementById('resultModal');
             
             document.getElementById('resultChar').textContent = data.char;
+            document.getElementById('resultQuestion').textContent = question ? `测${question}` : '综合运势';
             document.getElementById('resultStrokes').textContent = data.analysis.strokes + '画';
             document.getElementById('resultWuxing').textContent = data.analysis.wuxing + '行';
+            document.getElementById('resultStructure').textContent = data.analysis.structure;
             document.getElementById('resultJixiong').textContent = data.analysis.jixiong;
             
+            // 生成针对问题的分析
+            const questionAnalysis = generateQuestionAnalysis(question, data);
+            
             document.getElementById('resultBrief').textContent = data.result.brief;
-            document.getElementById('resultCareer').textContent = data.result.career;
-            document.getElementById('resultWealth').textContent = data.result.wealth;
-            document.getElementById('resultLove').textContent = data.result.love;
+            document.getElementById('resultHandwriting').textContent = questionAnalysis.handwriting;
+            document.getElementById('resultCareer').textContent = questionAnalysis.career;
+            document.getElementById('resultWealth').textContent = questionAnalysis.wealth;
+            document.getElementById('resultLove').textContent = questionAnalysis.love;
             document.getElementById('resultHealth').textContent = data.result.health;
             document.getElementById('resultSuggestion').textContent = data.result.suggestion;
             
-            result.classList.add('show');
+            modal.classList.add('show');
         }
         
-        // 重置
+        // 根据问题生成针对性分析
+        function generateQuestionAnalysis(question, data) {
+            const q = question.toLowerCase();
+            const wuxing = data.analysis.wuxing;
+            const char = data.char;
+            
+            // 笔迹分析（模拟）
+            const handwritingTips = {
+                '事业': `从「${char}」字的整体布局来看，${wuxing}属性明显，主事业运势。字迹端正者贵人运佳，笔画流畅者发展顺利。`,
+                '财运': `「${char}」字偏旁部首${wuxing}属性旺，偏财运较强。笔画圆润者理财顺利，结构紧凑者积少成多。`,
+                '感情': `「${char}」字感情宫位${wuxing}主动态。字迹工整者感情稳定，笔画轻盈者浪漫多情。`,
+                '学业': `「${char}」字学府宫${wuxing}生旺，利于学业。笔画清晰者记忆良好，结构严谨者逻辑分明。`,
+                '健康': `「${char}」字身体健康宫${wuxing}为主导。笔画均匀者气血调和，力度适中者身心健康。`
+            };
+            
+            // 根据问题返回针对性内容
+            if (q.includes('事业') || q.includes('工作')) {
+                return {
+                    handwriting: handwritingTips['事业'],
+                    career: data.result.career + '\n\n针对事业发展：' + getCareerAdvice(wuxing, q),
+                    wealth: data.result.wealth,
+                    love: data.result.love
+                };
+            } else if (q.includes('财运') || q.includes('钱')) {
+                return {
+                    handwriting: handwritingTips['财运'],
+                    career: data.result.career,
+                    wealth: data.result.wealth + '\n\n针对财运：' + getWealthAdvice(wuxing, q),
+                    love: data.result.love
+                };
+            } else if (q.includes('感情') || q.includes('爱情') || q.includes('婚姻')) {
+                return {
+                    handwriting: handwritingTips['感情'],
+                    career: data.result.career,
+                    wealth: data.result.wealth,
+                    love: data.result.love + '\n\n针对感情：' + getLoveAdvice(data.analysis.structure, q)
+                };
+            } else if (q.includes('健康')) {
+                return {
+                    handwriting: handwritingTips['健康'],
+                    career: data.result.career,
+                    wealth: data.result.wealth,
+                    love: data.result.love
+                };
+            } else {
+                // 默认综合分析
+                return {
+                    handwriting: `从「${char}」字的笔迹来看，${wuxing}属性明显。笔画力度适中者运势平稳，结构工整者诸事顺遂。整体呈现${data.analysis.jixiong}之象。`,
+                    career: data.result.career,
+                    wealth: data.result.wealth,
+                    love: data.result.love
+                };
+            }
+        }
+        
+        function getCareerAdvice(wuxing, q) {
+            const advice = {
+                '木': '宜主动出击，把握机遇，适合开创型事业。',
+                '火': '宜保持热情但防急躁，稳步推进为宜。',
+                '土': '宜守成稳健，贵人运平稳。',
+                '金': '宜果断决策，适合管理类工作。',
+                '水': '宜灵活变通，智慧生财。'
+            };
+            return advice[wuxing] || '顺势而为，稳步发展。';
+        }
+        
+        function getWealthAdvice(wuxing, q) {
+            const advice = {
+                '木': '正财旺盛，偏财运也不错，可适当投资。',
+                '火': '财运来得快去得也快，宜稳不宜冲动。',
+                '土': '财聚财守，宜积少成多。',
+                '金': '正偏财皆佳，适合理财投资。',
+                '水': '流动生财，智慧生财，收益浮动。'
+            };
+            return advice[wuxing] || '财运平稳。';
+        }
+        
+        function getLoveAdvice(structure, q) {
+            const advice = {
+                '左右结构': '感情需要双方共同经营，互补互助。',
+                '上下结构': '感情有上有下，需要相互理解平衡。',
+                '半包围结构': '感情中有包容，保护欲强。',
+                '独体字': '感情独立自我，需注意换位思考。'
+            };
+            return advice[structure] || '感情运势平稳发展。';
+        }
+        
+        function closeModal() {
+            document.getElementById('resultModal').classList.remove('show');
+        }
+        
         function reset() {
             document.getElementById('charInput').value = '';
             document.getElementById('questionInput').value = '';
-            document.getElementById('result').classList.remove('show');
             document.getElementById('vipBanner').style.display = 'none';
         }
         
@@ -789,39 +848,34 @@
             const loading = document.getElementById('loading');
             loading.classList.add('show');
             
-            try {
-                // 转Base64
-                const reader = new FileReader();
-                reader.onload = async function(evt) {
-                    const base64 = evt.target.result;
-                    
-                    try {
-                        const response = await fetch(API_BASE + '/api/ocr', {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({image: base64})
-                        });
-                        
-                        const data = await response.json();
-                        
-                        if (data.char) {
-                            document.getElementById('charInput').value = data.char;
-                            alert('识别成功: ' + data.char);
-                        } else {
-                            alert(data.message || '未能识别文字，请手动输入');
-                        }
-                    } catch (err) {
-                        alert('OCR服务暂时不可用，请手动输入');
-                    } finally {
-                        loading.classList.remove('show');
-                    }
-                };
-                reader.readAsDataURL(file);
+            const reader = new FileReader();
+            reader.onload = async function(evt) {
+                const base64 = evt.target.result;
                 
-            } catch (err) {
-                loading.classList.remove('show');
-                alert('读取图片失败');
-            }
+                try {
+                    const response = await fetch(API_BASE + '/api/ocr', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({image: base64})
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.char) {
+                        document.getElementById('charInput').value = data.char;
+                        // 直接开始测字，不让用户确认
+                        loading.classList.remove('show');
+                        setTimeout(() => startCezi(), 300);
+                    } else {
+                        loading.classList.remove('show');
+                        alert(data.message || '未能识别文字，请重试或手动输入');
+                    }
+                } catch (err) {
+                    loading.classList.remove('show');
+                    alert('识别服务暂时不可用，请手动输入');
+                }
+            };
+            reader.readAsDataURL(file);
         });
         
         // 历史记录
@@ -834,9 +888,9 @@
                 
                 if (data.history && data.history.length > 0) {
                     list.innerHTML = data.history.reverse().map(h => `
-                        <div class="history-item" onclick="viewHistory('${h.char}')">
+                        <div class="history-item" onclick="viewHistory('${h.char}', '${h.question || ''}')">
                             <span class="history-char">${h.char}</span>
-                            <span class="history-brief">${h.brief || ''}</span>
+                            <span class="history-brief">${h.question || '综合运势'}</span>
                             <span class="history-time">${new Date(h.time * 1000).toLocaleDateString()}</span>
                         </div>
                     `).join('');
@@ -848,14 +902,10 @@
             }
         }
         
-        function showHistory() {
-            showPage('history');
-        }
-        
-        function viewHistory(char) {
+        function viewHistory(char, question) {
             document.getElementById('charInput').value = char;
+            document.getElementById('questionInput').value = question || '';
             showPage('home');
-            setTimeout(() => startCezi(), 100);
         }
         
         // 会员相关
@@ -870,35 +920,16 @@
                 alert('请选择套餐');
                 return;
             }
-            
-            try {
-                const response = await fetch(API_BASE + '/api/payment/create', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        plan: selectedPlan,
-                        openid: openid
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.message) {
-                    alert(data.message);
-                } else {
-                    alert('支付功能开发中');
-                }
-                
-            } catch (e) {
-                alert('支付服务暂时不可用');
-            }
+            alert('支付功能开发中，敬请期待！');
         }
         
         // 回车测字
         document.getElementById('charInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                startCezi();
-            }
+            if (e.key === 'Enter') startCezi();
+        });
+        
+        document.getElementById('questionInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') startCezi();
         });
     </script>
 </body>
