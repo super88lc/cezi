@@ -216,6 +216,72 @@
             padding: 16px;
         }
         
+        /* 弹窗内加载动画 */
+        .modal-loading {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .modal-loading.show {
+            display: block;
+        }
+        
+        .modal-loading .spinner {
+            width: 56px;
+            height: 56px;
+            border: 4px solid rgba(99,102,241,0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        .modal-loading p {
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+        
+        /* 真人解读样式 */
+        .master-voice {
+            background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(245,158,11,0.1));
+            border: 1px solid rgba(245,158,11,0.3);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 16px 0;
+        }
+        
+        .master-voice .master-intro {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        
+        .master-voice .master-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .master-voice .master-name {
+            color: var(--gold);
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .master-voice .master-text {
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+        
         .modal-overlay.show { display: flex; }
         
         .modal-content {
@@ -439,7 +505,15 @@
         <div class="modal-content">
             <button class="modal-close" onclick="closeModal()">✕</button>
             
-            <div class="result-header">
+            <!-- 弹窗内加载 -->
+            <div class="modal-loading" id="modalLoading">
+                <div class="spinner"></div>
+                <p>🔮 老朽正在细细推演...</p>
+                <p style="font-size: 13px; margin-top: 8px;">AI 深度分析中</p>
+            </div>
+            
+            <!-- 实际结果内容 -->
+            <div id="resultContent">
                 <div class="result-char" id="resultChar"></div>
                 <div class="result-question" id="resultQuestion"></div>
                 <div class="result-tags">
@@ -486,6 +560,7 @@
             </div>
             
             <button class="btn-new" onclick="closeModal(); reset();">再测一字</button>
+            </div>
         </div>
     </div>
     
@@ -537,8 +612,14 @@
                 return;
             }
             
-            const loading = document.getElementById('loading');
-            loading.classList.add('show');
+            // 在弹窗内显示加载
+            const modal = document.getElementById('resultModal');
+            const modalLoading = document.getElementById('modalLoading');
+            const resultContent = document.getElementById('resultContent');
+            
+            modal.classList.add('show');
+            modalLoading.classList.add('show');
+            if (resultContent) resultContent.style.display = 'none';
             
             const reader = new FileReader();
             reader.onload = async function(evt) {
@@ -553,17 +634,21 @@
                     
                     const data = await response.json();
                     
-                    loading.classList.remove('show');
+                    modalLoading.classList.remove('show');
+                    if (resultContent) resultContent.style.display = 'block';
                     
                     if (data.char) {
                         // 识别成功，直接测字
                         doCezi(data.char, question);
                     } else {
                         alert('未识别到文字，请重试或手动输入');
+                        closeModal();
                     }
                 } catch (err) {
-                    loading.classList.remove('show');
+                    modalLoading.classList.remove('show');
+                    if (resultContent) resultContent.style.display = 'block';
                     alert('识别失败，请重试');
+                    closeModal();
                 }
             };
             reader.readAsDataURL(file);
@@ -582,8 +667,14 @@
         
         // 测字API
         async function doCezi(char, question) {
-            const loading = document.getElementById('loading');
-            loading.classList.add('show');
+            // 在弹窗内显示加载动画
+            const modal = document.getElementById('resultModal');
+            const modalLoading = document.getElementById('modalLoading');
+            const resultContent = document.getElementById('resultContent');
+            
+            modal.classList.add('show');
+            modalLoading.classList.add('show');
+            if (resultContent) resultContent.style.display = 'none';
             
             try {
                 const response = await fetch(API_BASE + '/api/cezi', {
@@ -597,41 +688,120 @@
                 });
                 
                 const data = await response.json();
-                loading.classList.remove('show');
+                
+                modalLoading.classList.remove('show');
+                if (resultContent) resultContent.style.display = 'block';
                 
                 if (data.data) {
-                    showResult(data.data, question);
+                    showResult(data.data, data.verbose || '', question);
                 } else {
                     alert(data.message || '测算失败');
+                    closeModal();
                 }
             } catch (e) {
-                loading.classList.remove('show');
+                modalLoading.classList.remove('show');
+                if (resultContent) resultContent.style.display = 'block';
                 alert('网络错误，请重试');
+                closeModal();
             }
         }
         
-        // 显示结果
-        function showResult(data, question) {
+        // 显示结果 - 支持verbose详细解读
+        function showResult(data, verboseText, question) {
             const modal = document.getElementById('resultModal');
+            const resultContent = document.getElementById('resultContent');
             
-            document.getElementById('resultChar').textContent = data.char;
-            document.getElementById('resultQuestion').textContent = question;
-            document.getElementById('targetQuestion').textContent = question;
-            document.getElementById('resultStrokes').textContent = data.analysis.strokes + '画';
-            document.getElementById('resultWuxing').textContent = data.analysis.wuxing + '行';
-            document.getElementById('resultStructure').textContent = data.analysis.structure;
-            document.getElementById('resultJixiong').textContent = data.analysis.jixiong;
-            
-            // 针对性分析
-            const targeted = generateTargetedAnalysis(question, data);
-            
-            document.getElementById('resultBrief').textContent = data.result.brief;
-            document.getElementById('resultTargeted').textContent = targeted;
-            document.getElementById('resultCareer').textContent = data.result.career;
-            document.getElementById('resultWealth').textContent = data.result.wealth;
-            document.getElementById('resultLove').textContent = data.result.love;
-            document.getElementById('resultHealth').textContent = data.result.health;
-            document.getElementById('resultSuggestion').textContent = data.result.suggestion;
+            // 如果有verbose详细解读，使用完整模板
+            if (verboseText) {
+                resultContent.innerHTML = `
+                    <div class="master-voice">
+                        <div class="master-intro">
+                            <div class="master-avatar">👴</div>
+                            <div class="master-name">测字先生</div>
+                        </div>
+                        <div class="master-text">${verboseText}</div>
+                    </div>
+                    
+                    <div class="result-header">
+                        <div class="result-char">${data.char}</div>
+                        <div class="result-question">${question}</div>
+                        <div class="result-tags">
+                            <span class="tag">${data.analysis.strokes}画</span>
+                            <span class="tag">${data.analysis.wuxing}行</span>
+                            <span class="tag">${data.analysis.structure}</span>
+                            <span class="tag gold">${data.analysis.jixiong}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💡 开运建议</h3>
+                        <p>${data.result.suggestion}</p>
+                    </div>
+                    
+                    <button class="btn-new" onclick="closeModal(); reset();">再测一字</button>
+                `;
+            } else {
+                // 兼容没有verbose的情况
+                resultContent.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-char">${data.char}</div>
+                        <div class="result-question">${question}</div>
+                        <div class="result-tags">
+                            <span class="tag">${data.analysis.strokes}画</span>
+                            <span class="tag">${data.analysis.wuxing}行</span>
+                            <span class="tag">${data.analysis.structure}</span>
+                            <span class="tag gold">${data.analysis.jixiong}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>📝 总体分析</h3>
+                        <p id="resultBrief"></p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>✍️ 针对「${question}」</h3>
+                        <p id="resultTargeted"></p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💼 事业</h3>
+                        <p id="resultCareer"></p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💰 财运</h3>
+                        <p id="resultWealth"></p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💕 感情</h3>
+                        <p id="resultLove"></p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💪 健康</h3>
+                        <p id="resultHealth"></p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>✨ 开运建议</h3>
+                        <p id="resultSuggestion"></p>
+                    </div>
+                    
+                    <button class="btn-new" onclick="closeModal(); reset();">再测一字</button>
+                `;
+                
+                // 填充数据
+                const targeted = generateTargetedAnalysis(question, data);
+                document.getElementById('resultBrief').textContent = data.result.brief;
+                document.getElementById('resultTargeted').textContent = targeted;
+                document.getElementById('resultCareer').textContent = data.result.career;
+                document.getElementById('resultWealth').textContent = data.result.wealth;
+                document.getElementById('resultLove').textContent = data.result.love;
+                document.getElementById('resultHealth').textContent = data.result.health;
+                document.getElementById('resultSuggestion').textContent = data.result.suggestion;
+            }
             
             modal.classList.add('show');
         }
@@ -692,6 +862,14 @@
         
         function closeModal() {
             document.getElementById('resultModal').classList.remove('show');
+            // 重置弹窗状态
+            const modalLoading = document.getElementById('modalLoading');
+            const resultContent = document.getElementById('resultContent');
+            if (modalLoading) modalLoading.classList.remove('show');
+            if (resultContent) {
+                resultContent.style.display = 'block';
+                resultContent.innerHTML = '';
+            }
         }
         
         function reset() {
