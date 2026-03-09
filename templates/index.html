@@ -711,7 +711,10 @@
             const modal = document.getElementById('resultModal');
             const resultContent = document.getElementById('resultContent');
             
-            // 如果有verbose详细解读，使用完整模板
+            // 生成针对性分析
+            const targeted = generateTargetedAnalysis(question, data);
+            
+            // 如果有verbose详细解读，完整显示
             if (verboseText) {
                 resultContent.innerHTML = `
                     <div class="master-voice">
@@ -734,7 +737,37 @@
                     </div>
                     
                     <div class="result-section">
-                        <h3>💡 开运建议</h3>
+                        <h3>📝 总体分析</h3>
+                        <p>${data.result.brief}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>✍️ 针对「${question}」</h3>
+                        <p>${targeted}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💼 事业</h3>
+                        <p>${data.result.career}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💰 财运</h3>
+                        <p>${data.result.wealth}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💕 感情</h3>
+                        <p>${data.result.love}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💪 健康</h3>
+                        <p>${data.result.health}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>✨ 开运建议</h3>
                         <p>${data.result.suggestion}</p>
                     </div>
                     
