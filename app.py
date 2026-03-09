@@ -13,7 +13,7 @@ import random
 import string
 import hashlib
 import requests
-from cezi_core import generate_result
+from cezi_core_v3 import generate_enhanced_result, format_verbose
 
 app = Flask(__name__, template_folder='templates')
 CORS(app)
@@ -107,8 +107,8 @@ def cezi():
             "message": "开通会员享受无限次测字"
         }), 403
     
-    # 生成结果
-    result = generate_result(char, question)
+    # 生成结果 - 使用V3增强版
+    result = generate_enhanced_result(char, question)
     increment_count(openid)
     
     # 保存历史
@@ -116,12 +116,16 @@ def cezi():
     user["history"].append({
         "char": char,
         "time": time.time(),
-        "brief": result["result"]["brief"]
+        "brief": f"{char}字，{result['analysis']['jixiong']}"
     })
+    
+    # 格式化输出
+    verbose_text = format_verbose(result)
     
     return jsonify({
         "success": True,
         "data": result,
+        "verbose": verbose_text,
         "remaining": PLANS["monthly"]["days"] - user["daily_count"] if user["level"] == "free" else "无限"
     })
 
