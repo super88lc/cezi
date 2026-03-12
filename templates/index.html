@@ -439,6 +439,12 @@
         <div class="modal-content">
             <button class="modal-close" onclick="closeModal()">✕</button>
             
+            <!-- 弹窗内加载动画 -->
+            <div class="modal-loading" id="modalLoading" style="display:none;text-align:center;padding:60px 20px;">
+                <div style="width:56px;height:56px;border:4px solid rgba(99,102,241,0.2);border-top-color:#6366f1;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>
+                <p style="color:#94a3b8;">🔮 老朽正在推演...</p>
+            </div>
+            
             <div class="result-header">
                 <div class="result-char" id="resultChar"></div>
                 <div class="result-question" id="resultQuestion"></div>
@@ -598,18 +604,61 @@
             reader.readAsDataURL(file);
         });
         
-        // 手动输入后直接测字
+        // 手动输入后直接测字（使用弹窗）
         document.getElementById('charInput').addEventListener('input', function(e) {
             const char = e.target.value.trim();
             const question = getQuestion();
             
-            if (char && question) {
-                // 自动测字
-                doCezi(char, question);
+            if (char && question && char.length === 1) {
+                // 使用弹窗方式显示结果（和拍照一样）
+                doCeziWithModal(char, question);
             }
         });
         
-        // 测字API
+        // 使用弹窗的测字方式
+        async function doCeziWithModal(char, question) {
+            const modal = document.getElementById('resultModal');
+            const modalLoading = document.getElementById('modalLoading');
+            const resultContent = document.getElementById('resultContent');
+            
+            modal.classList.add('show');
+            modalLoading.classList.add('show');
+            if (resultContent) resultContent.style.display = 'none';
+            
+            const direction = getDirection();
+            
+            try {
+                const response = await fetch(API_BASE + '/api/cezi', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        char: char,
+                        question: question,
+                        direction: direction,
+                        openid: 'guest_' + Date.now()
+                    })
+                });
+                
+                const data = await response.json();
+                
+                modalLoading.classList.remove('show');
+                if (resultContent) resultContent.style.display = 'block';
+                
+                if (data.data) {
+                    showResult(data.data, data.verbose || '', question);
+                } else {
+                    alert(data.message || '测算失败');
+                    closeModal();
+                }
+            } catch (err) {
+                modalLoading.classList.remove('show');
+                if (resultContent) resultContent.style.display = 'block';
+                alert('网络错误，请重试');
+                closeModal();
+            }
+        }
+        
+        // 旧的方式（保留兼容性）
         async function doCezi(char, question) {
             const loading = document.getElementById('loading');
             loading.classList.add('show');
