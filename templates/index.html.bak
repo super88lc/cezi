@@ -216,6 +216,197 @@
             padding: 16px;
         }
         
+        /* 弹窗内加载动画 */
+        .modal-loading {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .modal-loading.show {
+            display: block;
+        }
+        
+        /* 八卦进度图 */
+        .bagua-loader {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 20px;
+        }
+        
+        .bagua-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 160px;
+            height: 160px;
+            border: 3px solid rgba(245, 158, 11, 0.3);
+            border-radius: 50%;
+            animation: rotate 8s linear infinite;
+        }
+        
+        .bagua-inner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            border: 2px solid rgba(245, 158, 11, 0.5);
+            border-radius: 50%;
+            animation: rotate-reverse 5s linear infinite;
+        }
+        
+        .bagua-core {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--bg);
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
+        }
+        
+        .bagua-trigrams {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            animation: spin 3s linear infinite;
+        }
+        
+        .trigram {
+            position: absolute;
+            font-size: 14px;
+            color: var(--gold-light);
+            font-weight: bold;
+        }
+        
+        .trigram-1 { top: 5px; left: 50%; transform: translateX(-50%); }
+        .trigram-2 { top: 20%; right: 10%; }
+        .trigram-3 { top: 50%; right: 5px; transform: translateY(-50%); }
+        .trigram-4 { bottom: 20%; right: 10%; }
+        .trigram-5 { bottom: 5px; left: 50%; transform: translateX(-50%); }
+        .trigram-6 { bottom: 20%; left: 10%; }
+        .trigram-7 { top: 50%; left: 5px; transform: translateY(-50%); }
+        .trigram-8 { top: 20%; left: 10%; }
+        
+        @keyframes rotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        @keyframes rotate-reverse {
+            from { transform: translate(-50%, -50%) rotate(360deg); }
+            to { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; }
+        }
+        
+        .bagua-core.animate {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .loading-status {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 15px;
+        }
+        
+        .loading-status .step {
+            padding: 6px 12px;
+            margin: 4px;
+            border-radius: 20px;
+            display: inline-block;
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+        
+        .loading-status .step.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .loading-status .step.done {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+        
+        .modal-loading .spinner {
+            width: 56px;
+            height: 56px;
+            border: 4px solid rgba(99,102,241,0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        .modal-loading p {
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+        
+        /* 真人解读样式 */
+        .master-voice {
+            background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(245,158,11,0.1));
+            border: 1px solid rgba(245,158,11,0.3);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 16px 0;
+        }
+        
+        .master-voice .master-intro {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        
+        .master-voice .master-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .master-voice .master-name {
+            color: var(--gold);
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .master-voice .master-text {
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+        
         .modal-overlay.show { display: flex; }
         
         .modal-content {
@@ -439,7 +630,33 @@
         <div class="modal-content">
             <button class="modal-close" onclick="closeModal()">✕</button>
             
-            <div class="result-header">
+            <!-- 弹窗内加载 -->
+            <div class="modal-loading" id="modalLoading">
+                <div class="bagua-loader">
+                    <div class="bagua-circle"></div>
+                    <div class="bagua-inner"></div>
+                    <div class="bagua-trigrams">
+                        <span class="trigram trigram-1">☰</span>
+                        <span class="trigram trigram-2">☳</span>
+                        <span class="trigram trigram-3">☲</span>
+                        <span class="trigram trigram-4">☴</span>
+                        <span class="trigram trigram-5">☵</span>
+                        <span class="trigram trigram-6">☶</span>
+                        <span class="trigram trigram-7">☱</span>
+                        <span class="trigram trigram-8">☷</span>
+                    </div>
+                    <div class="bagua-core animate" id="baguaCore">۞</div>
+                </div>
+                <p style="color: var(--gold); font-size: 18px; margin-bottom: 10px;">🔮 老朽正在推演...</p>
+                <div class="loading-status" id="loadingStatus">
+                    <span class="step" id="stepOcr">📷 识别文字</span>
+                    <span class="step" id="stepAnalyze">📊 分析字象</span>
+                    <span class="step" id="stepMeihua">☯ 梅花易数</span>
+                </div>
+            </div>
+            
+            <!-- 实际结果内容 -->
+            <div id="resultContent">
                 <div class="result-char" id="resultChar"></div>
                 <div class="result-question" id="resultQuestion"></div>
                 <div class="result-tags">
@@ -486,6 +703,7 @@
             </div>
             
             <button class="btn-new" onclick="closeModal(); reset();">再测一字</button>
+            </div>
         </div>
     </div>
     
@@ -507,7 +725,9 @@
         function selectQuestion(q) {
             selectedQ = q;
             document.querySelectorAll('.question-tag').forEach(t => t.classList.remove('selected'));
-            event.target.classList.add('selected');
+            if (event && event.target) {
+                event.target.classList.add('selected');
+            }
             document.getElementById('customQuestion').value = q;
         }
         
@@ -517,31 +737,59 @@
             return custom || selectedQ || '综合运势';
         }
         
-        // 自动获取方位（基于IP定位）
+        // 自动获取方位（基于IP定位，相对北京）
         let userDirection = '南';
+        let directionReady = false;
         
         async function autoGetDirection() {
             try {
+                // 使用免费IP API获取位置
                 const response = await fetch('http://ip-api.com/json/?fields=lat,lon');
                 const data = await response.json();
+                
                 if (data.lat && data.lon) {
+                    // 北京坐标
                     const beijingLat = 39.9042;
                     const beijingLon = 116.4074;
+                    
+                    // 计算方位
                     const latDiff = data.lat - beijingLat;
                     const lonDiff = data.lon - beijingLon;
-                    if (Math.abs(lonDiff) > Math.abs(latDiff)) {
-                        userDirection = lonDiff > 0 ? '东' : '西';
+                    
+                    if (Math.abs(latDiff) < 0.1 && Math.abs(lonDiff) < 0.1) {
+                        userDirection = '北'; // 近似北京
+                    } else if (lonDiff > 0.1 && Math.abs(lonDiff) > Math.abs(latDiff)) {
+                        userDirection = '东';
+                    } else if (lonDiff < -0.1 && Math.abs(lonDiff) > Math.abs(latDiff)) {
+                        userDirection = '西';
+                    } else if (latDiff > 0.1 && Math.abs(latDiff) > Math.abs(lonDiff)) {
+                        userDirection = '南';
+                    } else if (latDiff > 0.1 && lonDiff > 0.1) {
+                        userDirection = '东南';
+                    } else if (latDiff > 0.1 && lonDiff < -0.1) {
+                        userDirection = '西南';
+                    } else if (latDiff < -0.1 && lonDiff > 0.1) {
+                        userDirection = '东北';
+                    } else if (latDiff < -0.1 && lonDiff < -0.1) {
+                        userDirection = '西北';
                     } else {
-                        userDirection = latDiff > 0 ? '南' : '北';
+                        userDirection = '北';
                     }
-                    console.log('方位:', userDirection);
+                    
+                    console.log('检测到您的位置:', data.lat, data.lon, '→ 方位:', userDirection);
+                    directionReady = true;
                 }
-            } catch(e) {
-                console.log('IP定位失败');
+            } catch (e) {
+                console.log('IP定位失败，使用默认方位南');
+                userDirection = '南';
+                directionReady = true;
             }
         }
+        
+        // 页面加载时自动获取方位
         autoGetDirection();
         
+        // 获取方位
         function getDirection() {
             return userDirection;
         }
@@ -566,8 +814,14 @@
                 return;
             }
             
-            const loading = document.getElementById('loading');
-            loading.classList.add('show');
+            // 在弹窗内显示加载
+            const modal = document.getElementById('resultModal');
+            const modalLoading = document.getElementById('modalLoading');
+            const resultContent = document.getElementById('resultContent');
+            
+            modal.classList.add('show');
+            modalLoading.classList.add('show');
+            if (resultContent) resultContent.style.display = 'none';
             
             const reader = new FileReader();
             reader.onload = async function(evt) {
@@ -582,17 +836,21 @@
                     
                     const data = await response.json();
                     
-                    loading.classList.remove('show');
+                    modalLoading.classList.remove('show');
+                    if (resultContent) resultContent.style.display = 'block';
                     
                     if (data.char) {
                         // 识别成功，直接测字
                         doCezi(data.char, question);
                     } else {
                         alert('未识别到文字，请重试或手动输入');
+                        closeModal();
                     }
                 } catch (err) {
-                    loading.classList.remove('show');
+                    modalLoading.classList.remove('show');
+                    if (resultContent) resultContent.style.display = 'block';
                     alert('识别失败，请重试');
+                    closeModal();
                 }
             };
             reader.readAsDataURL(file);
@@ -609,10 +867,32 @@
             }
         });
         
+        // 更新加载状态
+        function updateLoadingStep(step) {
+            const steps = ['stepOcr', 'stepAnalyze', 'stepMeihua'];
+            steps.forEach((id, idx) => {
+                const el = document.getElementById(id);
+                el.classList.remove('active', 'done');
+                if (idx < step - 1) el.classList.add('done');
+                if (idx === step - 1) el.classList.add('active');
+            });
+        }
+        
         // 测字API
         async function doCezi(char, question) {
-            const loading = document.getElementById('loading');
-            loading.classList.add('show');
+            const modal = document.getElementById('resultModal');
+            const modalLoading = document.getElementById('modalLoading');
+            const resultContent = document.getElementById('resultContent');
+            
+            modal.classList.add('show');
+            modalLoading.classList.add('show');
+            if (resultContent) resultContent.style.display = 'none';
+            
+            // 重置并显示加载步骤
+            updateLoadingStep(1);
+            
+            // 获取方位
+            const direction = getDirection();
             
             try {
                 const response = await fetch(API_BASE + '/api/cezi', {
@@ -621,46 +901,173 @@
                     body: JSON.stringify({
                         char: char,
                         question: question,
+                        direction: direction,
                         openid: 'guest_' + Date.now()
                     })
                 });
                 
+                updateLoadingStep(2);
+                
                 const data = await response.json();
-                loading.classList.remove('show');
+                
+                updateLoadingStep(3);
+                
+                // 稍作延迟让用户看到完成
+                await new Promise(r => setTimeout(r, 400));
+                
+                modalLoading.classList.remove('show');
+                if (resultContent) resultContent.style.display = 'block';
                 
                 if (data.data) {
-                    showResult(data.data, question);
+                    showResult(data.data, data.verbose || '', question);
                 } else {
                     alert(data.message || '测算失败');
+                    closeModal();
                 }
             } catch (e) {
-                loading.classList.remove('show');
+                modalLoading.classList.remove('show');
+                if (resultContent) resultContent.style.display = 'block';
                 alert('网络错误，请重试');
+                closeModal();
             }
         }
         
-        // 显示结果
-        function showResult(data, question) {
+        // 显示结果 - 支持verbose详细解读
+        function showResult(data, verboseText, question) {
             const modal = document.getElementById('resultModal');
+            const resultContent = document.getElementById('resultContent');
             
-            document.getElementById('resultChar').textContent = data.char;
-            document.getElementById('resultQuestion').textContent = question;
-            document.getElementById('targetQuestion').textContent = question;
-            document.getElementById('resultStrokes').textContent = data.analysis.strokes + '画';
-            document.getElementById('resultWuxing').textContent = data.analysis.wuxing + '行';
-            document.getElementById('resultStructure').textContent = data.analysis.structure;
-            document.getElementById('resultJixiong').textContent = data.analysis.jixiong;
-            
-            // 针对性分析
+            // 生成针对性分析
             const targeted = generateTargetedAnalysis(question, data);
             
-            document.getElementById('resultBrief').textContent = data.result.brief;
-            document.getElementById('resultTargeted').textContent = targeted;
-            document.getElementById('resultCareer').textContent = data.result.career;
-            document.getElementById('resultWealth').textContent = data.result.wealth;
-            document.getElementById('resultLove').textContent = data.result.love;
-            document.getElementById('resultHealth').textContent = data.result.health;
-            document.getElementById('resultSuggestion').textContent = data.result.suggestion;
+            // 获取结论和建议
+            const conclusion = data.conclusion || data.result?.career || "运势平稳";
+            const suggestion = data.result?.suggestion || conclusion || "顺势而为";
+            
+            // 如果有verbose详细解读，优先显示
+            if (verboseText) {
+                resultContent.innerHTML = `
+                    <div class="master-voice">
+                        <div class="master-intro">
+                            <div class="master-avatar">👴</div>
+                            <div class="master-name">测字先生</div>
+                        </div>
+                        <div class="master-text">${verboseText}</div>
+                    </div>
+                    
+                    <div class="result-header">
+                        <div class="result-char">${data.char}</div>
+                        <div class="result-question">${question}</div>
+                        <div class="result-tags">
+                            <span class="tag">${data.analysis.strokes}画</span>
+                            <span class="tag">${data.analysis.wuxing}行</span>
+                            <span class="tag">${data.analysis.structure}</span>
+                            <span class="tag gold">${data.analysis.jixiong}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💼 事业</h3>
+                        <p>${data.result?.career || '事业运势平稳'}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💰 财运</h3>
+                        <p>${data.result?.wealth || '财运平稳'}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💕 感情</h3>
+                        <p>${data.result?.love || '感情运势平稳'}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💪 健康</h3>
+                        <p>${data.result?.health || '身体康健'}</p>
+                    </div>
+                    
+                    <button class="btn-new" onclick="closeModal(); reset();">再测一字</button>
+                `;
+            } else {
+                // 没有verbose时的简化显示
+                resultContent.innerHTML = `
+                    <div class="result-header">
+                        <div class="result-char">${data.char}</div>
+                        <div class="result-question">${question}</div>
+                        <div class="result-tags">
+                            <span class="tag">${data.analysis.strokes}画</span>
+                            <span class="tag">${data.analysis.wuxing}行</span>
+                            <span class="tag">${data.analysis.structure}</span>
+                            <span class="tag gold">${data.analysis.jixiong}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>📝 总体分析</h3>
+                        <p>${targeted}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💼 事业</h3>
+                        <p>${data.result?.career || '事业运势平稳'}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💰 财运</h3>
+                        <p>${data.result?.wealth || '财运平稳'}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💕 感情</h3>
+                        <p>${data.result?.love || '感情运势平稳'}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💪 健康</h3>
+                        <p>${data.result?.health || '身体康健'}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>✨ 开运建议</h3>
+                        <p>${suggestion}</p>
+                    </div>
+                    
+                    <button class="btn-new" onclick="closeModal(); reset();">再测一字</button>
+                `;
+            }
+            
+            modal.classList.add('show');
+        }
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💕 感情</h3>
+                        <p id="resultLove"></p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💪 健康</h3>
+                        <p id="resultHealth"></p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>✨ 开运建议</h3>
+                        <p id="resultSuggestion"></p>
+                    </div>
+                    
+                    <button class="btn-new" onclick="closeModal(); reset();">再测一字</button>
+                `;
+                
+                // 填充数据
+                const targeted = generateTargetedAnalysis(question, data);
+                document.getElementById('resultBrief').textContent = data.result.brief;
+                document.getElementById('resultTargeted').textContent = targeted;
+                document.getElementById('resultCareer').textContent = data.result.career;
+                document.getElementById('resultWealth').textContent = data.result.wealth;
+                document.getElementById('resultLove').textContent = data.result.love;
+                document.getElementById('resultHealth').textContent = data.result.health;
+                document.getElementById('resultSuggestion').textContent = data.result.suggestion;
+            }
             
             modal.classList.add('show');
         }
@@ -721,6 +1128,14 @@
         
         function closeModal() {
             document.getElementById('resultModal').classList.remove('show');
+            // 重置弹窗状态
+            const modalLoading = document.getElementById('modalLoading');
+            const resultContent = document.getElementById('resultContent');
+            if (modalLoading) modalLoading.classList.remove('show');
+            if (resultContent) {
+                resultContent.style.display = 'block';
+                resultContent.innerHTML = '';
+            }
         }
         
         function reset() {

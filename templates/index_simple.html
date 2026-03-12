@@ -517,35 +517,6 @@
             return custom || selectedQ || '综合运势';
         }
         
-        // 自动获取方位（基于IP定位）
-        let userDirection = '南';
-        
-        async function autoGetDirection() {
-            try {
-                const response = await fetch('http://ip-api.com/json/?fields=lat,lon');
-                const data = await response.json();
-                if (data.lat && data.lon) {
-                    const beijingLat = 39.9042;
-                    const beijingLon = 116.4074;
-                    const latDiff = data.lat - beijingLat;
-                    const lonDiff = data.lon - beijingLon;
-                    if (Math.abs(lonDiff) > Math.abs(latDiff)) {
-                        userDirection = lonDiff > 0 ? '东' : '西';
-                    } else {
-                        userDirection = latDiff > 0 ? '南' : '北';
-                    }
-                    console.log('方位:', userDirection);
-                }
-            } catch(e) {
-                console.log('IP定位失败');
-            }
-        }
-        autoGetDirection();
-        
-        function getDirection() {
-            return userDirection;
-        }
-        
         // 显示手动输入
         function showManualInput() {
             document.getElementById('inputArea').classList.toggle('show');
