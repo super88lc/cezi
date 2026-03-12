@@ -440,9 +440,11 @@
             <button class="modal-close" onclick="closeModal()">✕</button>
             
             <!-- 弹窗内加载动画 -->
-            <div class="modal-loading" id="modalLoading" style="display:none;text-align:center;padding:60px 20px;">
-                <div style="width:56px;height:56px;border:4px solid rgba(99,102,241,0.2);border-top-color:#6366f1;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 20px;"></div>
-                <p style="color:#94a3b8;">🔮 老朽正在推演...</p>
+            <div class="modal-loading" id="modalLoading" style="display:none;">
+                <div class="thinking-process" id="thinkingProcess">
+                    <div class="thinking-header">🔮 测字先生正在推演...</div>
+                    <div class="thinking-steps" id="thinkingSteps"></div>
+                </div>
             </div>
             
             <div class="result-header">
@@ -622,11 +624,61 @@
             const resultContent = document.getElementById('resultContent');
             
             modal.classList.add('show');
-            modalLoading.classList.add('show');
+            modalLoading.style.display = 'block';
             if (resultContent) resultContent.style.display = 'none';
             
             const direction = getDirection();
             
+            // 显示思考过程
+            const thinkingSteps = document.getElementById('thinkingSteps');
+            
+            // 思考步骤
+            const steps = [
+                { icon: '👁️', title: '观字形', detail: `细看「${char}」字，整体形态...` },
+                { icon: '✍️', title: '数笔画', detail: '测算笔画总数，推演气数...' },
+                { icon: '🔢', title: '定五行', detail: '根据笔画定五行属性...' },
+                { icon: '🏗️', title: '析结构', detail: '分析偏旁部首，解读结构...' },
+                { icon: '🧭', title: '合方位', detail: `结合${direction}位，得天时之力...` },
+                { icon: '⏰', title: '参时辰', detail: '融合当下时辰，推演气运...' },
+                { icon: '☯️', title: '演梅花', detail: '梅花易数起卦，综合分析...' },
+                { icon: '📖', title: '出结论', detail: '整合诸象，得出最终结论...' },
+            ];
+            
+            // 逐步显示思考过程
+            for (let i = 0; i < steps.length; i++) {
+                const step = steps[i];
+                thinkingSteps.innerHTML += `
+                    <div class="thinking-step" id="step${i}">
+                        <span class="step-icon">${step.icon}</span>
+                        <div class="step-text">
+                            <div class="step-title">${step.title}</div>
+                            <div class="step-detail">${step.detail}</div>
+                        </div>
+                    </div>
+                `;
+                // 滚动到底部
+                const stepEl = document.getElementById('step' + i);
+                if (stepEl) {
+                    stepEl.classList.add('active');
+                    stepEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                // 等待一点时间
+                await new Promise(r => setTimeout(r, 300));
+            }
+            
+            // 标记完成
+            for (let i = 0; i < steps.length; i++) {
+                const stepEl = document.getElementById('step' + i);
+                if (stepEl) {
+                    stepEl.classList.remove('active');
+                    stepEl.classList.add('done');
+                }
+            }
+            
+            // 额外等待，让用户感受思考过程（手动输入需要更长等待）
+            await new Promise(r => setTimeout(r, 1500));
+            
+            // 发送API请求
             try {
                 const response = await fetch(API_BASE + '/api/cezi', {
                     method: 'POST',
@@ -641,7 +693,9 @@
                 
                 const data = await response.json();
                 
-                modalLoading.classList.remove('show');
+                // 隐藏思考过程，显示结果
+                modalLoading.style.display = 'none';
+                document.getElementById('thinkingSteps').innerHTML = '';
                 if (resultContent) resultContent.style.display = 'block';
                 
                 if (data.data) {
@@ -651,7 +705,7 @@
                     closeModal();
                 }
             } catch (err) {
-                modalLoading.classList.remove('show');
+                modalLoading.style.display = 'none';
                 if (resultContent) resultContent.style.display = 'block';
                 alert('网络错误，请重试');
                 closeModal();
@@ -788,3 +842,69 @@
     </script>
 </body>
 </html>
+        
+        /* 深度思考过程显示 */
+        .thinking-process {
+            padding: 20px;
+            text-align: left;
+        }
+        
+        .thinking-header {
+            font-size: 18px;
+            color: #f59e0b;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .thinking-steps {
+            font-size: 14px;
+            line-height: 2;
+        }
+        
+        .thinking-step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: rgba(99,102,241,0.1);
+            border-radius: 12px;
+            border-left: 3px solid #6366f1;
+            animation: fadeInStep 0.5s ease-out;
+        }
+        
+        .thinking-step.active {
+            border-left-color: #f59e0b;
+            background: rgba(245,158,11,0.1);
+        }
+        
+        .thinking-step.done {
+            border-left-color: #22c55e;
+            background: rgba(34,197,94,0.1);
+        }
+        
+        .step-icon {
+            font-size: 18px;
+            margin-right: 10px;
+            min-width: 24px;
+        }
+        
+        .step-text {
+            flex: 1;
+        }
+        
+        .step-title {
+            color: #f8fafc;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .step-detail {
+            color: #94a3b8;
+            font-size: 12px;
+        }
+        
+        @keyframes fadeInStep {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
