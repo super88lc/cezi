@@ -4,6 +4,60 @@
 整合测字算法 + OCR + 微信支付
 """
 
+
+MINIMAX_API_KEY = "sk-cp-Tmj3A5rpV32ER1gQvhW4jaC5rQ66nFglQfabG8CtLITQpPSjsmj50Ct6jh6i_G9fGugGyAYV744LhdVJ9irPGmgRgOrIGa6y--HBGAhWyGGVJTSmrpiPTro"
+
+def get_minimax_deep_analysis(char, question, direction, time_info, analysis_data):
+    """调用MiniMax进行深度分析"""
+    prompt = f"""你是一位经验丰富的老测字先生，正在为客人测字分析。请用文言文风格分析以下内容：
+
+测的字：{char}
+问题：{question}
+测字方位：{direction}
+时辰：{time_info['shichen']}
+日的天干地支：{time_info['day_gan']}
+笔画数：{analysis_data['strokes']}
+五行属性：{analysis_data['wuxing']}
+字形结构：{analysis_data['structure']}
+吉凶：{analysis_data['jixiong']}
+
+请详细分析这个字的含义，包括：
+1. 字形整体意象
+2. 笔画与五行的关系  
+3. 偏旁部首的含义
+4. 结合时辰方位的运势
+5. 针对"{question}"的具体建议
+
+请用文言文风格回复，类似古代算命先生的语气。"""
+
+    try:
+        response = requests.post(
+            "https://api.minimaxi.com/anthropic/v1/messages",
+            headers={
+                "Authorization": f"Bearer {MINIMAX_API_KEY}",
+                "Content-Type": "application/json",
+                "anthropic-version": "2023-06-01"
+            },
+            json={
+                "model": "MiniMax-M2.5",
+                "max_tokens": 600,
+                "messages": [{"role": "user", "content": prompt}]
+            },
+            timeout=45
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            if 'content' in result:
+                for item in result['content']:
+                    if item.get('type') == 'text':
+                        return item.get('text', '')
+        return None
+    except Exception as e:
+        print(f"MiniMax API error: {e}")
+        return None
+
+
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import os
@@ -109,6 +163,21 @@ def cezi():
     
     # 生成结果 - 使用V3增强版
     result = generate_enhanced_result(char, question, data.get("direction", "南"))
+    
+    # 调用MiniMax进行深度分析
+    try:
+        deep_analysis = get_minimax_deep_analysis(
+            char, 
+            question, 
+            result.get('meihua', {}).get('direction', '南'),
+            result.get('meihua', {}).get('time', {}),
+            result.get('analysis', {})
+        )
+        if deep_analysis:
+            result['deep_analysis'] = deep_analysis
+    except Exception as e:
+        print(f"Deep analysis error: {e}")
+    
     increment_count(openid)
     
     # 保存历史

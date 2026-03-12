@@ -493,6 +493,11 @@
                 <p id="resultSuggestion"></p>
             </div>
             
+            <div class="result-section" id="deepSection" style="display:none;">
+                <h3>🔮 AI深度分析</h3>
+                <p id="deepAnalysisText"></p>
+            </div>
+            
             <button class="btn-new" onclick="closeModal(); reset();">再测一字</button>
         </div>
     </div>
@@ -764,6 +769,16 @@
             document.getElementById('resultLove').textContent = data.result.love;
             document.getElementById('resultHealth').textContent = data.result.health;
             document.getElementById('resultSuggestion').textContent = data.result.suggestion;
+            
+            // 显示深度分析结果
+            if (data.deep_analysis) {
+                const deepSection = document.getElementById('deepSection');
+                const deepText = document.getElementById('deepAnalysisText');
+                if (deepSection && deepText) {
+                    deepText.innerHTML = data.deep_analysis.replace(/\n/g, '<br>');
+                    deepSection.style.display = 'block';
+                }
+            }
             
             modal.classList.add('show');
         }
