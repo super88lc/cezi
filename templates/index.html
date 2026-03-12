@@ -579,18 +579,6 @@
                 </div>
                 
                 <input type="text" class="custom-question" id="customQuestion" placeholder="或输入其他问题（选填）">
-            
-            <div class="step-title" style="margin-top: 20px;">您所在的方位？</div>
-            <div class="question-options" id="directionOptions">
-                <span class="question-tag" onclick="selectDirection('北')">北🔼</span>
-                <span class="question-tag" onclick="selectDirection('东北')">东北⬆</span>
-                <span class="question-tag" onclick="selectDirection('东')">东▶</span>
-                <span class="question-tag" onclick="selectDirection('东南')">东南⬇</span>
-                <span class="question-tag" onclick="selectDirection('南')">南🔽</span>
-                <span class="question-tag" onclick="selectDirection('西南')">西南⬇</span>
-                <span class="question-tag" onclick="selectDirection('西')">西◀</span>
-                <span class="question-tag" onclick="selectDirection('西北')">西北⬆</span>
-            </div>
                 
                 <div class="step-title" style="margin-top: 30px;">第2步：书写或拍照</div>
                 
@@ -737,7 +725,9 @@
         function selectQuestion(q) {
             selectedQ = q;
             document.querySelectorAll('.question-tag').forEach(t => t.classList.remove('selected'));
-            event.target.classList.add('selected');
+            if (event && event.target) {
+                event.target.classList.add('selected');
+            }
             document.getElementById('customQuestion').value = q;
         }
         
@@ -747,17 +737,61 @@
             return custom || selectedQ || '综合运势';
         }
         
-        // 选择方位
-        let selectedDirection = '南';
-        function selectDirection(d) {
-            selectedDirection = d;
-            document.querySelectorAll('#directionOptions .question-tag').forEach(t => t.classList.remove('selected'));
-            event.target.classList.add('selected');
+        // 自动获取方位（基于IP定位，相对北京）
+        let userDirection = '南';
+        let directionReady = false;
+        
+        async function autoGetDirection() {
+            try {
+                // 使用免费IP API获取位置
+                const response = await fetch('http://ip-api.com/json/?fields=lat,lon');
+                const data = await response.json();
+                
+                if (data.lat && data.lon) {
+                    // 北京坐标
+                    const beijingLat = 39.9042;
+                    const beijingLon = 116.4074;
+                    
+                    // 计算方位
+                    const latDiff = data.lat - beijingLat;
+                    const lonDiff = data.lon - beijingLon;
+                    
+                    if (Math.abs(latDiff) < 0.1 && Math.abs(lonDiff) < 0.1) {
+                        userDirection = '北'; // 近似北京
+                    } else if (lonDiff > 0.1 && Math.abs(lonDiff) > Math.abs(latDiff)) {
+                        userDirection = '东';
+                    } else if (lonDiff < -0.1 && Math.abs(lonDiff) > Math.abs(latDiff)) {
+                        userDirection = '西';
+                    } else if (latDiff > 0.1 && Math.abs(latDiff) > Math.abs(lonDiff)) {
+                        userDirection = '南';
+                    } else if (latDiff > 0.1 && lonDiff > 0.1) {
+                        userDirection = '东南';
+                    } else if (latDiff > 0.1 && lonDiff < -0.1) {
+                        userDirection = '西南';
+                    } else if (latDiff < -0.1 && lonDiff > 0.1) {
+                        userDirection = '东北';
+                    } else if (latDiff < -0.1 && lonDiff < -0.1) {
+                        userDirection = '西北';
+                    } else {
+                        userDirection = '北';
+                    }
+                    
+                    console.log('检测到您的位置:', data.lat, data.lon, '→ 方位:', userDirection);
+                    directionReady = true;
+                }
+            } catch (e) {
+                console.log('IP定位失败，使用默认方位南');
+                userDirection = '南';
+                directionReady = true;
+            }
         }
+        
+        // 页面加载时自动获取方位
+        autoGetDirection();
         
         // 获取方位
         function getDirection() {
-            return selectedDirection;
+            return userDirection;
         }
         
         // 显示手动输入
