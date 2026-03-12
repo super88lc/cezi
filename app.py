@@ -108,7 +108,7 @@ def cezi():
         }), 403
     
     # 生成结果 - 使用V3增强版
-    result = generate_enhanced_result(char, question)
+    result = generate_enhanced_result(char, question, data.get("direction", "南"))
     increment_count(openid)
     
     # 保存历史

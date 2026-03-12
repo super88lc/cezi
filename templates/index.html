@@ -220,11 +220,136 @@
         .modal-loading {
             display: none;
             text-align: center;
-            padding: 60px 20px;
+            padding: 40px 20px;
         }
         
         .modal-loading.show {
             display: block;
+        }
+        
+        /* 八卦进度图 */
+        .bagua-loader {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 20px;
+        }
+        
+        .bagua-circle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 160px;
+            height: 160px;
+            border: 3px solid rgba(245, 158, 11, 0.3);
+            border-radius: 50%;
+            animation: rotate 8s linear infinite;
+        }
+        
+        .bagua-inner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            border: 2px solid rgba(245, 158, 11, 0.5);
+            border-radius: 50%;
+            animation: rotate-reverse 5s linear infinite;
+        }
+        
+        .bagua-core {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--bg);
+            box-shadow: 0 0 30px rgba(245, 158, 11, 0.5);
+        }
+        
+        .bagua-trigrams {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            animation: spin 3s linear infinite;
+        }
+        
+        .trigram {
+            position: absolute;
+            font-size: 14px;
+            color: var(--gold-light);
+            font-weight: bold;
+        }
+        
+        .trigram-1 { top: 5px; left: 50%; transform: translateX(-50%); }
+        .trigram-2 { top: 20%; right: 10%; }
+        .trigram-3 { top: 50%; right: 5px; transform: translateY(-50%); }
+        .trigram-4 { bottom: 20%; right: 10%; }
+        .trigram-5 { bottom: 5px; left: 50%; transform: translateX(-50%); }
+        .trigram-6 { bottom: 20%; left: 10%; }
+        .trigram-7 { top: 50%; left: 5px; transform: translateY(-50%); }
+        .trigram-8 { top: 20%; left: 10%; }
+        
+        @keyframes rotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        @keyframes rotate-reverse {
+            from { transform: translate(-50%, -50%) rotate(360deg); }
+            to { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 0.8; }
+        }
+        
+        .bagua-core.animate {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .loading-status {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-top: 15px;
+        }
+        
+        .loading-status .step {
+            padding: 6px 12px;
+            margin: 4px;
+            border-radius: 20px;
+            display: inline-block;
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+        
+        .loading-status .step.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .loading-status .step.done {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
         }
         
         .modal-loading .spinner {
@@ -454,6 +579,18 @@
                 </div>
                 
                 <input type="text" class="custom-question" id="customQuestion" placeholder="或输入其他问题（选填）">
+            
+            <div class="step-title" style="margin-top: 20px;">您所在的方位？</div>
+            <div class="question-options" id="directionOptions">
+                <span class="question-tag" onclick="selectDirection('北')">北🔼</span>
+                <span class="question-tag" onclick="selectDirection('东北')">东北⬆</span>
+                <span class="question-tag" onclick="selectDirection('东')">东▶</span>
+                <span class="question-tag" onclick="selectDirection('东南')">东南⬇</span>
+                <span class="question-tag" onclick="selectDirection('南')">南🔽</span>
+                <span class="question-tag" onclick="selectDirection('西南')">西南⬇</span>
+                <span class="question-tag" onclick="selectDirection('西')">西◀</span>
+                <span class="question-tag" onclick="selectDirection('西北')">西北⬆</span>
+            </div>
                 
                 <div class="step-title" style="margin-top: 30px;">第2步：书写或拍照</div>
                 
@@ -507,9 +644,27 @@
             
             <!-- 弹窗内加载 -->
             <div class="modal-loading" id="modalLoading">
-                <div class="spinner"></div>
-                <p>🔮 老朽正在细细推演...</p>
-                <p style="font-size: 13px; margin-top: 8px;">AI 深度分析中</p>
+                <div class="bagua-loader">
+                    <div class="bagua-circle"></div>
+                    <div class="bagua-inner"></div>
+                    <div class="bagua-trigrams">
+                        <span class="trigram trigram-1">☰</span>
+                        <span class="trigram trigram-2">☳</span>
+                        <span class="trigram trigram-3">☲</span>
+                        <span class="trigram trigram-4">☴</span>
+                        <span class="trigram trigram-5">☵</span>
+                        <span class="trigram trigram-6">☶</span>
+                        <span class="trigram trigram-7">☱</span>
+                        <span class="trigram trigram-8">☷</span>
+                    </div>
+                    <div class="bagua-core animate" id="baguaCore">۞</div>
+                </div>
+                <p style="color: var(--gold); font-size: 18px; margin-bottom: 10px;">🔮 老朽正在推演...</p>
+                <div class="loading-status" id="loadingStatus">
+                    <span class="step" id="stepOcr">📷 识别文字</span>
+                    <span class="step" id="stepAnalyze">📊 分析字象</span>
+                    <span class="step" id="stepMeihua">☯ 梅花易数</span>
+                </div>
             </div>
             
             <!-- 实际结果内容 -->
@@ -592,6 +747,19 @@
             return custom || selectedQ || '综合运势';
         }
         
+        // 选择方位
+        let selectedDirection = '南';
+        function selectDirection(d) {
+            selectedDirection = d;
+            document.querySelectorAll('#directionOptions .question-tag').forEach(t => t.classList.remove('selected'));
+            event.target.classList.add('selected');
+        }
+        
+        // 获取方位
+        function getDirection() {
+            return selectedDirection;
+        }
+        
         // 显示手动输入
         function showManualInput() {
             document.getElementById('inputArea').classList.toggle('show');
@@ -665,9 +833,19 @@
             }
         });
         
+        // 更新加载状态
+        function updateLoadingStep(step) {
+            const steps = ['stepOcr', 'stepAnalyze', 'stepMeihua'];
+            steps.forEach((id, idx) => {
+                const el = document.getElementById(id);
+                el.classList.remove('active', 'done');
+                if (idx < step - 1) el.classList.add('done');
+                if (idx === step - 1) el.classList.add('active');
+            });
+        }
+        
         // 测字API
         async function doCezi(char, question) {
-            // 在弹窗内显示加载动画
             const modal = document.getElementById('resultModal');
             const modalLoading = document.getElementById('modalLoading');
             const resultContent = document.getElementById('resultContent');
@@ -676,6 +854,12 @@
             modalLoading.classList.add('show');
             if (resultContent) resultContent.style.display = 'none';
             
+            // 重置并显示加载步骤
+            updateLoadingStep(1);
+            
+            // 获取方位
+            const direction = getDirection();
+            
             try {
                 const response = await fetch(API_BASE + '/api/cezi', {
                     method: 'POST',
@@ -683,11 +867,19 @@
                     body: JSON.stringify({
                         char: char,
                         question: question,
+                        direction: direction,
                         openid: 'guest_' + Date.now()
                     })
                 });
                 
+                updateLoadingStep(2);
+                
                 const data = await response.json();
+                
+                updateLoadingStep(3);
+                
+                // 稍作延迟让用户看到完成
+                await new Promise(r => setTimeout(r, 400));
                 
                 modalLoading.classList.remove('show');
                 if (resultContent) resultContent.style.display = 'block';
@@ -714,7 +906,11 @@
             // 生成针对性分析
             const targeted = generateTargetedAnalysis(question, data);
             
-            // 如果有verbose详细解读，完整显示
+            // 获取结论和建议
+            const conclusion = data.conclusion || data.result?.career || "运势平稳";
+            const suggestion = data.result?.suggestion || conclusion || "顺势而为";
+            
+            // 如果有verbose详细解读，优先显示
             if (verboseText) {
                 resultContent.innerHTML = `
                     <div class="master-voice">
@@ -737,44 +933,29 @@
                     </div>
                     
                     <div class="result-section">
-                        <h3>📝 总体分析</h3>
-                        <p>${data.result.brief}</p>
-                    </div>
-                    
-                    <div class="result-section">
-                        <h3>✍️ 针对「${question}」</h3>
-                        <p>${targeted}</p>
-                    </div>
-                    
-                    <div class="result-section">
                         <h3>💼 事业</h3>
-                        <p>${data.result.career}</p>
+                        <p>${data.result?.career || '事业运势平稳'}</p>
                     </div>
                     
                     <div class="result-section">
                         <h3>💰 财运</h3>
-                        <p>${data.result.wealth}</p>
+                        <p>${data.result?.wealth || '财运平稳'}</p>
                     </div>
                     
                     <div class="result-section">
                         <h3>💕 感情</h3>
-                        <p>${data.result.love}</p>
+                        <p>${data.result?.love || '感情运势平稳'}</p>
                     </div>
                     
                     <div class="result-section">
                         <h3>💪 健康</h3>
-                        <p>${data.result.health}</p>
-                    </div>
-                    
-                    <div class="result-section">
-                        <h3>✨ 开运建议</h3>
-                        <p>${data.result.suggestion}</p>
+                        <p>${data.result?.health || '身体康健'}</p>
                     </div>
                     
                     <button class="btn-new" onclick="closeModal(); reset();">再测一字</button>
                 `;
             } else {
-                // 兼容没有verbose的情况
+                // 没有verbose时的简化显示
                 resultContent.innerHTML = `
                     <div class="result-header">
                         <div class="result-char">${data.char}</div>
@@ -789,22 +970,40 @@
                     
                     <div class="result-section">
                         <h3>📝 总体分析</h3>
-                        <p id="resultBrief"></p>
-                    </div>
-                    
-                    <div class="result-section">
-                        <h3>✍️ 针对「${question}」</h3>
-                        <p id="resultTargeted"></p>
+                        <p>${targeted}</p>
                     </div>
                     
                     <div class="result-section">
                         <h3>💼 事业</h3>
-                        <p id="resultCareer"></p>
+                        <p>${data.result?.career || '事业运势平稳'}</p>
                     </div>
                     
                     <div class="result-section">
                         <h3>💰 财运</h3>
-                        <p id="resultWealth"></p>
+                        <p>${data.result?.wealth || '财运平稳'}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💕 感情</h3>
+                        <p>${data.result?.love || '感情运势平稳'}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>💪 健康</h3>
+                        <p>${data.result?.health || '身体康健'}</p>
+                    </div>
+                    
+                    <div class="result-section">
+                        <h3>✨ 开运建议</h3>
+                        <p>${suggestion}</p>
+                    </div>
+                    
+                    <button class="btn-new" onclick="closeModal(); reset();">再测一字</button>
+                `;
+            }
+            
+            modal.classList.add('show');
+        }
                     </div>
                     
                     <div class="result-section">
