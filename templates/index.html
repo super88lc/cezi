@@ -663,7 +663,7 @@
                     stepEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
                 // 等待一点时间
-                await new Promise(r => setTimeout(r, 300));
+                await new Promise(r => setTimeout(r, 800));
             }
             
             // 标记完成
@@ -676,7 +676,7 @@
             }
             
             // 额外等待，让用户感受思考过程（手动输入需要更长等待）
-            await new Promise(r => setTimeout(r, 1500));
+            await new Promise(r => setTimeout(r, 2500));
             
             // 发送API请求
             try {
