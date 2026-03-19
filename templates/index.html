@@ -777,6 +777,7 @@
                     closeModal();
                 }
             } catch (err) {
+                document.getElementById('thinkingProcess').style.display = 'none';
                 modalLoading.style.display = 'none';
                 if (resultContent) resultContent.style.display = 'block';
                 alert('网络错误，请重试');
@@ -927,6 +928,10 @@
         
         function closeModal() {
             document.getElementById('resultModal').classList.remove('show');
+            // Reset thinking process
+            document.getElementById('modalLoading').style.display = 'none';
+            document.getElementById('thinkingProcess').style.display = 'none';
+            document.getElementById('thinkingSteps').innerHTML = '';
         }
         
         function reset() {
@@ -1036,7 +1041,13 @@
 </html>
         
         /* 深度思考过程显示 */
+        .modal-loading {
+            display: none;
+            min-height: 0;
+        }
+        
         .thinking-process {
+            display: none;
             padding: 20px;
             text-align: left;
         }
