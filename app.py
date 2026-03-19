@@ -7,28 +7,69 @@
 
 MINIMAX_API_KEY = "sk-cp-Tmj3A5rpV32ER1gQvhW4jaC5rQ66nFglQfabG8CtLITQpPSjsmj50Ct6jh6i_G9fGugGyAYV744LhdVJ9irPGmgRgOrIGa6y--HBGAhWyGGVJTSmrpiPTro"
 
-def get_minimax_deep_analysis(char, question, direction, time_info, analysis_data):
-    """调用MiniMax进行深度分析"""
-    prompt = f"""你是一位经验丰富的老测字先生，正在为客人测字分析。请用文言文风格分析以下内容：
+def get_minimax_deep_analysis(char, question, direction, time_info, analysis_data, meihua_data=None):
+    """调用MiniMax进行深度个性化分析"""
+    
+    # 根据问题类型提供更具体的分析方向
+    question_type = ""
+    if "考试" in question:
+        question_type = "考试学业"
+    elif "事业" in question or "工作" in question:
+        question_type = "事业发展"
+    elif "财运" in question or "钱" in question:
+        question_type = "财富运势"
+    elif "感情" in question or "婚姻" in question:
+        question_type = "感情婚姻"
+    elif "健康" in question:
+        question_type = "健康状况"
+    elif "出行" in question or "旅行" in question:
+        question_type = "出行平安"
+    else:
+        question_type = "综合运势"
+    
+    # 梅花易数信息
+    meihua_info = ""
+    if meihua_data:
+        gua = meihua_data.get('gua', '')
+        meihua_info = f"""
+梅花易数卦象：本卦{gua}（上卦{gua[0] if gua else '?'} + 下卦{gua[1] if len(gua) > 1 else '?'}）
+动爻分析：{meihua_data.get('dongyao', '待定')}"""
+    
+    prompt = f"""你是一位德高望重的测字先生，用文言文为客人进行深度个性化分析。
 
-测的字：{char}
-问题：{question}
-测字方位：{direction}
-时辰：{time_info['shichen']}
-日的天干地支：{time_info['day_gan']}
-笔画数：{analysis_data['strokes']}
-五行属性：{analysis_data['wuxing']}
-字形结构：{analysis_data['structure']}
-吉凶：{analysis_data['jixiong']}
+【基本信息】
+- 测字：{char}
+- 提问：{question}（{question_type}）
+- 方位：{direction}
+- 时辰：{time_info.get('shichen', '未知')}（{time_info.get('day_gan', '')}日）
+- 笔画：{analysis_data.get('strokes', 0)}画
+- 五行：{analysis_data.get('wuxing', '未知')}行
+- 结构：{analysis_data.get('structure', '未知')}
+- 吉凶：{analysis_data.get('jixiong', '未知')}{meihua_info}
 
-请详细分析这个字的含义，包括：
-1. 字形整体意象
-2. 笔画与五行的关系  
-3. 偏旁部首的含义
-4. 结合时辰方位的运势
-5. 针对"{question}"的具体建议
+【分析要求】
 
-请用文言文风格回复，类似古代算命先生的语气。"""
+1. **字形解字**（50字左右）
+   - 分析「{char}」字的象形含义
+   - 解读左右/上下/包围结构的象征意义
+
+2. **五行分析**（30字左右）
+   - {analysis_data.get('wuxing', '')}行与笔画数的关系
+   - 五行平衡与否的运势影响
+
+3. **{question_type}详解**（80字左右）
+   - 针对「{question}」给出具体、可操作的建议
+   - 结合时辰方位给出趋吉避凶的方法
+
+4. **开运指引**（40字左右）
+   - 适合的颜色、方位、数字
+   - 今日宜忌
+
+【风格要求】
+- 文言文为主，夹杂白话解释
+- 如古代算命先生语气
+- 语气温和但有自信
+- 结论明确，不要模棱两可"""
 
     try:
         response = requests.post(
@@ -164,14 +205,15 @@ def cezi():
     # 生成结果 - 使用V3增强版
     result = generate_enhanced_result(char, question, data.get("direction", "南"))
     
-    # 调用MiniMax进行深度分析
+    # 调用MiniMax进行深度分析（传入完整数据）
     try:
         deep_analysis = get_minimax_deep_analysis(
             char, 
             question, 
             result.get('meihua', {}).get('direction', '南'),
             result.get('meihua', {}).get('time', {}),
-            result.get('analysis', {})
+            result.get('analysis', {}),
+            result.get('meihua', {})
         )
         if deep_analysis:
             result['deep_analysis'] = deep_analysis
