@@ -825,8 +825,8 @@
             const history = JSON.parse(localStorage.getItem('cezi_history') || '[]');
             const item = history[index];
             if (item) {
-                document.getElementById('manualChar').value = item.char;
-                selectQuestion(item.question);
+                // 重新调用API显示结果
+                doCezi(item.char, item.question);
             }
         }
         
