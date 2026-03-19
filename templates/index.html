@@ -714,6 +714,17 @@
             
             document.getElementById('resultBrief').textContent = data.result.brief;
             
+            // 深度分析作为主要内容显示
+            const deepSection = document.getElementById('deepAnalysisSection');
+            if (data.deep_analysis) {
+                document.getElementById('deepAnalysisText').innerHTML = data.deep_analysis.replace(/\n/g, '<br><br>');
+            } else {
+                // 如果没有深度分析，用简明内容
+                document.getElementById('deepAnalysisText').innerHTML = 
+                    (data.result?.brief || '') + '<br><br>' + 
+                    (data.result?.suggestion || '');
+            }
+            
             // 字形拆解
             const splitText = data.split_text || '';
             const splitMeaning = data.split_meaning || '';
