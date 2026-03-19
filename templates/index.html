@@ -363,6 +363,7 @@
         .history-info { flex: 1; margin-left: 16px; }
         .history-q { font-size: 14px; color: var(--primary-light); }
         .history-result { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        .history-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; opacity: 0.7; }
         /* Tab样式 */
         .result-tabs {
             display: flex;
@@ -461,6 +462,7 @@
         <div class="page" id="page-history">
             <div class="header">
                 <h2>📜 测字记录</h2>
+                <p style="font-size:12px;color:var(--text-muted);margin-top:8px;" onclick="clearHistory()">🗑️ 清空记录</p>
             </div>
             <div id="historyList"></div>
         </div>
@@ -851,6 +853,9 @@
                 deepSection.style.display = 'none';
             }
             
+            // 保存到历史记录
+            saveToHistory(data.char, question, data);
+            
             // 默认显示基础Tab
             switchResultTab('basic');
             
@@ -924,9 +929,71 @@
         }
         
         // 历史记录
-        async function loadHistory() {
+        // 保存到历史记录
+        function saveToHistory(char, question, result) {
+            const history = JSON.parse(localStorage.getItem('cezi_history') || '[]');
+            const record = {
+                char: char,
+                question: question,
+                wuxing: result.analysis?.wuxing || '',
+                structure: result.analysis?.structure || '',
+                jixiong: result.analysis?.jixiong || '',
+                brief: result.result?.brief || '',
+                time: new Date().toISOString()
+            };
+            history.unshift(record); // 添加到开头
+            // 最多保存50条
+            if (history.length > 50) history.pop();
+            localStorage.setItem('cezi_history', JSON.stringify(history));
+        }
+        
+        // 加载历史记录
+        function loadHistory() {
             const list = document.getElementById('historyList');
-            list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px;">暂无记录</p>';
+            const history = JSON.parse(localStorage.getItem('cezi_history') || '[]');
+            
+            if (history.length === 0) {
+                list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px;">暂无记录<br><small>测过的字会保存在这里</small></p>';
+                return;
+            }
+            
+            let html = '';
+            history.forEach((item, index) => {
+                const date = new Date(item.time);
+                const dateStr = date.toLocaleDateString('zh-CN') + ' ' + date.getHours() + ':' + String(date.getMinutes()).padStart(2, '0');
+                html += `
+                    <div class="history-item" onclick="viewHistory(${index})">
+                        <div class="history-char">${item.char}</div>
+                        <div class="history-info">
+                            <div class="history-q">${item.question}</div>
+                            <div class="history-result">${item.wuxing}行 · ${item.structure} · ${item.jixiong}</div>
+                            <div class="history-time">${dateStr}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+        
+        // 清空历史记录
+        function clearHistory() {
+            if (confirm('确定要清空所有记录吗？')) {
+                localStorage.removeItem('cezi_history');
+                loadHistory();
+            }
+        }
+        
+        // 查看历史记录（点击回顾）
+        function viewHistory(index) {
+            const history = JSON.parse(localStorage.getItem('cezi_history') || '[]');
+            const item = history[index];
+            if (item) {
+                // 填充到当前页面
+                document.getElementById('manualChar').value = item.char;
+                selectQuestion(item.question);
+                // 可以选择自动测算
+                // doCeziWithModal(item.char, item.question);
+            }
         }
         // 方位描述
         const DIRECTION_DESC = {
