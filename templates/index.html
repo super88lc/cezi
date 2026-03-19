@@ -547,9 +547,19 @@
         
         function showPage(page) {
             currentPage = page;
+            // 更新页面显示
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('page-' + page).classList.add('active');
-            if (page === 'history') loadHistory();
+            
+            // 更新底部导航按钮状态
+            document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
+            const tabButtons = document.querySelectorAll('.tab-item');
+            if (page === 'home') {
+                tabButtons[0]?.classList.add('active');
+            } else if (page === 'history') {
+                tabButtons[1]?.classList.add('active');
+                loadHistory();
+            }
         }
         
         // 选择问题
