@@ -778,7 +778,7 @@
         }
         
         // 历史记录
-        // 保存到历史记录
+        // 保存到历史记录（保存完整结果）
         function saveToHistory(char, question, result) {
             const history = JSON.parse(localStorage.getItem('cezi_history') || '[]');
             const record = {
@@ -787,7 +787,15 @@
                 wuxing: result.analysis?.wuxing || '',
                 structure: result.analysis?.structure || '',
                 jixiong: result.analysis?.jixiong || '',
+                strokes: result.analysis?.strokes || 0,
                 brief: result.result?.brief || '',
+                career: result.result?.career || '',
+                wealth: result.result?.wealth || '',
+                love: result.result?.love || '',
+                health: result.result?.health || '',
+                suggestion: result.result?.suggestion || '',
+                meihua: result.meihua || null,
+                deep_analysis: result.deep_analysis || '',
                 time: new Date().toISOString()
             };
             history.unshift(record);
@@ -825,8 +833,49 @@
             const history = JSON.parse(localStorage.getItem('cezi_history') || '[]');
             const item = history[index];
             if (item) {
-                // 重新调用API显示结果
-                doCezi(item.char, item.question);
+                // 直接显示保存的结果
+                showSavedResult(item);
+            }
+        }
+        
+        // 显示保存的历史结果
+        function showSavedResult(item) {
+            const modal = document.getElementById('resultModal');
+            const thinkingModal = document.getElementById('thinkingModal');
+            const resultContent = document.getElementById('resultContent');
+            
+            modal.classList.add('show');
+            thinkingModal.style.display = 'none';
+            resultContent.style.display = 'block';
+            
+            // 填充数据
+            document.getElementById('resultChar').textContent = item.char;
+            document.getElementById('resultQuestion').textContent = item.question;
+            document.getElementById('resultStrokes').textContent = item.strokes + '画';
+            document.getElementById('resultWuxing').textContent = item.wuxing + '行';
+            document.getElementById('resultStructure').textContent = item.structure;
+            document.getElementById('resultJixiong').textContent = item.jixiong;
+            document.getElementById('resultBrief').textContent = item.brief;
+            document.getElementById('resultCareer').textContent = item.career;
+            document.getElementById('resultWealth').textContent = item.wealth;
+            document.getElementById('resultLove').textContent = item.love;
+            document.getElementById('resultHealth').textContent = item.health;
+            document.getElementById('resultSuggestion').textContent = item.suggestion;
+            
+            // 梅花易数
+            if (item.meihua) {
+                const m = item.meihua;
+                document.getElementById('meihuaInfo').textContent = 
+                    '时辰：' + m.time?.shichen + '（' + m.time?.day_gan + '日）\n方位：' + m.direction + '\n本卦：' + m.gua;
+            }
+            
+            // 深度分析
+            const deepSection = document.getElementById('deepSection');
+            if (item.deep_analysis && deepSection) {
+                document.getElementById('deepAnalysisText').innerHTML = item.deep_analysis.replace(/\n/g, '<br>');
+                deepSection.style.display = 'block';
+            } else if (deepSection) {
+                deepSection.style.display = 'none';
             }
         }
         
