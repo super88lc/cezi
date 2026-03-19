@@ -372,7 +372,7 @@
 
         
         /* 太极旋转动画 */
-        @keyframes rotateTaiji {
+        @keyframes spin {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
@@ -382,45 +382,8 @@
             height: 80px;
             margin: 0 auto 20px;
             position: relative;
-            animation: rotateTaiji 4s linear infinite;
-        }
-        
-        .taiji::before, .taiji::after {
-            content: '';
-            position: absolute;
-            width: 40px;
-            height: 80px;
-            border-radius: 40px;
-        }
-        
-        .taiji::before {
-            background: #f59e0b;
-            left: 0;
-        }
-        
-        .taiji::after {
-            background: #6366f1;
-            right: 0;
-        }
-        
-        .taiji-center {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-        }
-        
-        .taiji-center-white {
-            background: #fff;
-            left: 25%;
-        }
-        
-        .taiji-center-black {
-            background: #000;
-            right: 25%;
+            animation: spin 3s linear infinite;
+            font-size: 60px;
         }
 
     </style>
@@ -501,10 +464,7 @@
             
             <!-- 思考中弹窗 -->
             <div id="thinkingModal" style="text-align:center;padding:40px 20px;">
-                <div class="taiji">
-                    <div class="taiji-center taiji-center-white"></div>
-                    <div class="taiji-center taiji-center-black"></div>
-                </div>
+                <div class="taiji">☯️</div>
                 <div style="font-size:20px;color:#f59e0b;margin-bottom:30px;font-family:serif;">老朽正在推演...</div>
                 <div id="thinkingText" style="color:#94a3b8;font-size:14px;line-height:2;font-family:serif;"></div>
             </div>
@@ -610,6 +570,17 @@
                 alert('请先选择想问的事情');
                 return;
             }
+            
+            // 立即显示思考弹窗
+            const modal = document.getElementById('resultModal');
+            const thinkingModal = document.getElementById('thinkingModal');
+            const resultContent = document.getElementById('resultContent');
+            modal.classList.add('show');
+            thinkingModal.style.display = 'block';
+            resultContent.style.display = 'none';
+            
+            // 清空之前的思考文字
+            document.getElementById('thinkingText').innerHTML = '';
             
             const loading = document.getElementById('loading');
             loading.classList.add('show');
