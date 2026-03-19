@@ -486,13 +486,9 @@
         <div class="modal-content">
             <button class="modal-close" onclick="closeModal()">✕</button>
             
-            <!-- 弹窗内加载动画 -->
-            <!-- 思考过程仅在测算中显示 -->
-            <div class="modal-loading" id="modalLoading" style="display:none;">
-                <div class="thinking-process" id="thinkingProcess" style="display:none;">
-                    <div class="thinking-header">🔮 测字先生正在推演...</div>
-                    <div class="thinking-steps" id="thinkingSteps"></div>
-                </div>
+            <!-- 加载中 -->
+            <div id="modalLoading" style="display:none;padding:40px;text-align:center;">
+                <div style="color:var(--text-muted);">🔮 测字先生正在推演...</div>
             </div>
             
             <div class="result-header">
