@@ -425,12 +425,12 @@
                 <div class="step-title">第1步：想问什么事情？</div>
                 
                 <div class="question-options" id="questionOptions">
-                    <span class="question-tag" onclick="selectQuestion('考试运程')">📝 考试</span>
-                    <span class="question-tag" onclick="selectQuestion('事业运程')">💼 事业</span>
-                    <span class="question-tag" onclick="selectQuestion('财运如何')">💰 财运</span>
-                    <span class="question-tag" onclick="selectQuestion('感情运势')">💕 感情</span>
-                    <span class="question-tag" onclick="selectQuestion('健康状况')">💪 健康</span>
-                    <span class="question-tag" onclick="selectQuestion('出行平安')">🚗 出行</span>
+                    <span class="question-tag" onclick="selectQuestion('考试运程'); document.getElementById('charInput').focus();">📝 考试</span>
+                    <span class="question-tag" onclick="selectQuestion('事业运程'); document.getElementById('charInput').focus();">💼 事业</span>
+                    <span class="question-tag" onclick="selectQuestion('财运如何'); document.getElementById('charInput').focus();">💰 财运</span>
+                    <span class="question-tag" onclick="selectQuestion('感情运势'); document.getElementById('charInput').focus();">💕 感情</span>
+                    <span class="question-tag" onclick="selectQuestion('健康状况'); document.getElementById('charInput').focus();">💪 健康</span>
+                    <span class="question-tag" onclick="selectQuestion('出行平安'); document.getElementById('charInput').focus();">🚗 出行</span>
                 </div>
                 
                 <input type="text" class="custom-question" id="customQuestion" placeholder="或输入其他问题（选填）">
@@ -856,6 +856,11 @@
             } else if (deepSection) {
                 deepSection.style.display = 'none';
             }
+            
+            // 隐藏思考过程，显示结果
+            document.getElementById('modalLoading').style.display = 'none';
+            document.getElementById('thinkingProcess').style.display = 'none';
+            document.getElementById('thinkingSteps').innerHTML = '';
             
             // 保存到历史记录
             saveToHistory(data.char, question, data);
