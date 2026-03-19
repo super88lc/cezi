@@ -486,9 +486,13 @@
         <div class="modal-content">
             <button class="modal-close" onclick="closeModal()">✕</button>
             
-            <!-- 加载中 -->
-            <div id="modalLoading" style="display:none;padding:40px;text-align:center;">
-                <div style="color:var(--text-muted);">🔮 测字先生正在推演...</div>
+            <!-- 弹窗内加载动画 -->
+            <!-- 思考过程仅在测算中显示 -->
+            <div class="modal-loading" id="modalLoading" style="display:none;">
+                <div class="thinking-process" id="thinkingProcess" style="display:none;">
+                    <div class="thinking-header">🔮 测字先生正在推演...</div>
+                    <div class="thinking-steps" id="thinkingSteps"></div>
+                </div>
             </div>
             
             <div class="result-header">
@@ -580,12 +584,9 @@
         // 选择问题
         function selectQuestion(q) {
             selectedQ = q;
+            document.querySelectorAll('.question-tag').forEach(t => t.classList.remove('selected'));
+            event.target.classList.add('selected');
             document.getElementById('customQuestion').value = q;
-            // Update button states
-            document.querySelectorAll('.question-tag').forEach(t => {
-                t.classList.remove('selected');
-                if (t.textContent.includes(q.charAt(0))) t.classList.add('selected');
-            });
         }
         
         // 获取最终问题
@@ -699,8 +700,54 @@
             
             const direction = getDirection();
             
-            // 简单等待模拟思考
-            await new Promise(r => setTimeout(r, 3000));
+            // 显示思考过程
+            const thinkingSteps = document.getElementById('thinkingSteps');
+            
+            // 思考步骤
+            const steps = [
+                { icon: '👁️', title: '观字形', detail: `细看「${char}」字，整体形态...` },
+                { icon: '✍️', title: '数笔画', detail: '测算笔画总数，推演气数...' },
+                { icon: '🔢', title: '定五行', detail: '根据笔画定五行属性...' },
+                { icon: '🏗️', title: '析结构', detail: '分析偏旁部首，解读结构...' },
+                { icon: '🧭', title: '合方位', detail: `结合${direction}位，得天时之力...` },
+                { icon: '⏰', title: '参时辰', detail: '融合当下时辰，推演气运...' },
+                { icon: '☯️', title: '演梅花', detail: '梅花易数起卦，综合分析...' },
+                { icon: '📖', title: '出结论', detail: '整合诸象，得出最终结论...' },
+            ];
+            
+            // 逐步显示思考过程
+            for (let i = 0; i < steps.length; i++) {
+                const step = steps[i];
+                thinkingSteps.innerHTML += `
+                    <div class="thinking-step" id="step${i}">
+                        <span class="step-icon">${step.icon}</span>
+                        <div class="step-text">
+                            <div class="step-title">${step.title}</div>
+                            <div class="step-detail">${step.detail}</div>
+                        </div>
+                    </div>
+                `;
+                // 滚动到底部
+                const stepEl = document.getElementById('step' + i);
+                if (stepEl) {
+                    stepEl.classList.add('active');
+                    stepEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                // 等待一点时间
+                await new Promise(r => setTimeout(r, 800));
+            }
+            
+            // 标记完成
+            for (let i = 0; i < steps.length; i++) {
+                const stepEl = document.getElementById('step' + i);
+                if (stepEl) {
+                    stepEl.classList.remove('active');
+                    stepEl.classList.add('done');
+                }
+            }
+            
+            // 额外等待，让用户感受思考过程（手动输入需要更长等待）
+            await new Promise(r => setTimeout(r, 2500));
             
             // 发送API请求
             try {
@@ -717,11 +764,11 @@
                 
                 const data = await response.json();
                 
-                // 强制隐藏思考过程
-                const thinkingEl = document.getElementById('thinkingProcess');
-                const loadingEl = document.getElementById('modalLoading');
-                if (thinkingEl) thinkingEl.style.display = 'none';
-                if (loadingEl) loadingEl.style.display = 'none';
+                // 隐藏思考过程，显示结果
+                document.getElementById('thinkingProcess').style.display = 'none';
+                modalLoading.style.display = 'none';
+                document.getElementById('thinkingSteps').innerHTML = '';
+                if (resultContent) resultContent.style.display = 'block';
                 
                 if (data.data) {
                     showResult(data.data, data.verbose || '', question);
@@ -730,7 +777,6 @@
                     closeModal();
                 }
             } catch (err) {
-                document.getElementById('thinkingProcess').style.display = 'none';
                 modalLoading.style.display = 'none';
                 if (resultContent) resultContent.style.display = 'block';
                 alert('网络错误，请重试');
@@ -814,7 +860,7 @@
             // 隐藏思考过程，显示结果
             document.getElementById('modalLoading').style.display = 'none';
             document.getElementById('thinkingProcess').style.display = 'none';
-            
+            document.getElementById('thinkingSteps').innerHTML = '';
             
             // 保存到历史记录
             saveToHistory(data.char, question, data);
@@ -881,10 +927,6 @@
         
         function closeModal() {
             document.getElementById('resultModal').classList.remove('show');
-            // Reset thinking process
-            document.getElementById('modalLoading').style.display = 'none';
-            document.getElementById('thinkingProcess').style.display = 'none';
-            
         }
         
         function reset() {
@@ -994,13 +1036,7 @@
 </html>
         
         /* 深度思考过程显示 */
-        .modal-loading {
-            display: none;
-            min-height: 0;
-        }
-        
         .thinking-process {
-            display: none;
             padding: 20px;
             text-align: left;
         }
