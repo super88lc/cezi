@@ -72,6 +72,7 @@
         .question-options {
             display: flex;
             flex-wrap: wrap;
+            justify-content: center;
             gap: 10px;
             margin-bottom: 16px;
         }
@@ -486,8 +487,9 @@
             <button class="modal-close" onclick="closeModal()">✕</button>
             
             <!-- 弹窗内加载动画 -->
+            <!-- 思考过程仅在测算中显示 -->
             <div class="modal-loading" id="modalLoading" style="display:none;">
-                <div class="thinking-process" id="thinkingProcess">
+                <div class="thinking-process" id="thinkingProcess" style="display:none;">
                     <div class="thinking-header">🔮 测字先生正在推演...</div>
                     <div class="thinking-steps" id="thinkingSteps"></div>
                 </div>
@@ -693,6 +695,7 @@
             
             modal.classList.add('show');
             modalLoading.style.display = 'block';
+                document.getElementById('thinkingProcess').style.display = 'block';
             if (resultContent) resultContent.style.display = 'none';
             
             const direction = getDirection();
@@ -762,6 +765,7 @@
                 const data = await response.json();
                 
                 // 隐藏思考过程，显示结果
+                document.getElementById('thinkingProcess').style.display = 'none';
                 modalLoading.style.display = 'none';
                 document.getElementById('thinkingSteps').innerHTML = '';
                 if (resultContent) resultContent.style.display = 'block';
