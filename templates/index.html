@@ -702,8 +702,10 @@
                     alert(data.message || '测算失败');
                 }
             } catch (e) {
-                loading.classList.remove('show');
-                alert('网络错误，请重试');
+                // 隐藏思考弹窗，显示错误
+                const thinkingModal = document.getElementById('thinkingModal');
+                if (thinkingModal) thinkingModal.style.display = 'none';
+                alert('网络错误，请检查网络后重试');
             }
         }
         
