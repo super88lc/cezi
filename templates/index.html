@@ -9,70 +9,704 @@
         
         :root {
             --primary: #6366f1;
-            --primary-ligh
-        /* 深度思考过程显示 */
-        .thinking-process {
-            padding: 20px;
-            text-align: left;
+            --primary-light: #818cf8;
+            --gold: #f59e0b;
+            --gold-light: #fbbf24;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
         }
         
-        .thinking-header {
-            font-size: 18px;
-            color: #f59e0b;
-            margin-bottom: 20px;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            color: var(--text);
+            line-height: 1.5;
+        }
+        
+        .app {
+            max-width: 480px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        /* 头部 */
+        .header {
             text-align: center;
-            font-weight: 600;
+            padding: 40px 20px 30px;
         }
         
-        .thinking-steps {
-            font-size: 14px;
-            line-height: 2;
-        }
-        
-        .thinking-step {
-            display: flex;
-            align-items: flex-start;
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin-bottom: 12px;
-            padding: 12px;
-            background: rgba(99,102,241,0.1);
-            border-radius: 12px;
-            border-left: 3px solid #6366f1;
-            animation: fadeInStep 0.5s ease-out;
         }
         
-        .thinking-step.active {
-            border-left-color: #f59e0b;
-            background: rgba(245,158,11,0.1);
+        .header p {
+            color: var(--text-muted);
+            font-size: 15px;
         }
         
-        .thinking-step.done {
-            border-left-color: #22c55e;
-            background: rgba(34,197,94,0.1);
-        }
-        
-        .step-icon {
-            font-size: 18px;
-            margin-right: 10px;
-            min-width: 24px;
-        }
-        
-        .step-text {
-            flex: 1;
+        /* 步骤1：问问题 */
+        .step-card {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 28px;
+            margin: 0 16px;
+            border: 1px solid rgba(255,255,255,0.05);
         }
         
         .step-title {
-            color: #f8fafc;
+            font-size: 18px;
             font-weight: 600;
-            margin-bottom: 4px;
+            margin-bottom: 20px;
+            text-align: center;
         }
         
-        .step-detail {
-            color: #94a3b8;
-            font-size: 12px;
+        .question-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 16px;
         }
         
-        @keyframes fadeInStep {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .question-tag {
+            padding: 10px 18px;
+            background: rgba(99,102,241,0.15);
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 25px;
+            font-size: 14px;
+            color: var(--primary-light);
+            cursor: pointer;
+            transition: all 0.2s;
         }
-    </style></body></html>
+        
+        .question-tag:active, .question-tag.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .custom-question {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 15px;
+            outline: none;
+            margin-bottom: 20px;
+        }
+        
+        .custom-question::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .custom-question:focus {
+            border-color: var(--primary);
+        }
+        
+        /* 大拍照按钮 */
+        .capture-btn {
+            width: 100%;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border: none;
+            border-radius: 20px;
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+        }
+        
+        .capture-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .capture-btn .icon {
+            font-size: 48px;
+        }
+        
+        /* 手动输入 */
+        .manual-input {
+            text-align: center;
+            margin-top: 16px;
+            color: var(--text-muted);
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .manual-input:active {
+            color: var(--primary-light);
+        }
+        
+        /* 手动输入框 */
+        .input-area {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .input-area.show {
+            display: block;
+        }
+        
+        .char-input {
+            width: 100%;
+            height: 80px;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid rgba(99,102,241,0.3);
+            border-radius: 16px;
+            color: var(--gold);
+            font-size: 40px;
+            text-align: center;
+            outline: none;
+            font-weight: 600;
+        }
+        
+        /* 加载 */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .loading.show { display: block; }
+        
+        .spinner {
+            width: 56px;
+            height: 56px;
+            border: 4px solid rgba(99,102,241,0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .loading p {
+            color: var(--text-muted);
+            font-size: 16px;
+        }
+        
+        /* 结果弹窗 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        
+        .modal-overlay.show { display: flex; }
+        
+        .modal-content {
+            background: var(--card);
+            border-radius: 24px;
+            padding: 24px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalIn 0.4s ease;
+        }
+        
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.9) translateY(30px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .result-header {
+            text-align: center;
+            margin-bottom: 24px;
+            position: relative;
+        }
+        
+        .result-char {
+            font-size: 72px;
+            color: var(--gold);
+            text-shadow: 0 0 40px rgba(245,158,11,0.5);
+            margin-bottom: 12px;
+        }
+        
+        .result-question {
+            color: var(--primary-light);
+            font-size: 16px;
+            padding: 10px 20px;
+            background: rgba(99,102,241,0.2);
+            border-radius: 25px;
+            display: inline-block;
+        }
+        
+        .result-tags {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+        
+        .tag {
+            padding: 6px 14px;
+            background: rgba(99,102,241,0.15);
+            border-radius: 20px;
+            font-size: 13px;
+            color: var(--primary-light);
+        }
+        
+        .tag.gold {
+            background: rgba(245,158,11,0.2);
+            color: var(--gold-light);
+        }
+        
+        .result-section {
+            padding: 18px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .result-section:last-child { border-bottom: none; }
+        
+        .result-section h3 {
+            color: var(--gold);
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .result-section p {
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        
+        .btn-new {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        /* 底部导航 */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            background: rgba(15,23,42,0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 0 28px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .tab-item {
+            flex: 1;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 11px;
+            cursor: pointer;
+        }
+        
+        .tab-item.active { color: var(--primary-light); }
+        .tab-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+        
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        /* 历史 */
+        .history-item {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 0 16px 12px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .history-char { font-size: 28px; color: var(--gold); }
+        .history-info { flex: 1; margin-left: 16px; }
+        .history-q { font-size: 14px; color: var(--primary-light); }
+        .history-result { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- 首页 -->
+        <div class="page active" id="page-home">
+            <div class="header">
+                <h1>🔮 字测算</h1>
+                <p>一笔一划，洞悉天机</p>
+            </div>
+            
+            <!-- 步骤1：想问什么 -->
+            <div class="step-card">
+                <div class="step-title">第1步：想问什么事情？</div>
+                
+                <div class="question-options" id="questionOptions">
+                    <span class="question-tag" onclick="selectQuestion('考试运程')">📝 考试</span>
+                    <span class="question-tag" onclick="selectQuestion('事业运程')">💼 事业</span>
+                    <span class="question-tag" onclick="selectQuestion('财运如何')">💰 财运</span>
+                    <span class="question-tag" onclick="selectQuestion('感情运势')">💕 感情</span>
+                    <span class="question-tag" onclick="selectQuestion('健康状况')">💪 健康</span>
+                    <span class="question-tag" onclick="selectQuestion('出行平安')">🚗 出行</span>
+                </div>
+                
+                <input type="text" class="custom-question" id="customQuestion" placeholder="或输入其他问题（选填）">
+                
+                <div class="step-title" style="margin-top: 30px;">第2步：书写或拍照</div>
+                
+                <!-- 拍照按钮 -->
+                <button class="capture-btn" onclick="captureImage()">
+                    <span class="icon">📷</span>
+                    拍照识字
+                </button>
+                
+                <div class="manual-input" onclick="showManualInput()">
+                    或手动输入文字 →
+                </div>
+                
+                <!-- 手动输入区域 -->
+                <div class="input-area" id="inputArea">
+                    <input type="text" class="char-input" id="charInput" placeholder="请写一个字" maxlength="1">
+                </div>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>AI 正在分析...</p>
+            </div>
+        </div>
+        
+        <!-- 历史页 -->
+        <div class="page" id="page-history">
+            <div class="header">
+                <h2>📜 测字记录</h2>
+            </div>
+            <div id="historyList"></div>
+        </div>
+        
+        <!-- 底部导航 -->
+        <div class="tab-bar">
+            <div class="tab-item active" onclick="showPage('home')">
+                <span class="tab-icon">🏠</span>
+                首页
+            </div>
+            <div class="tab-item" onclick="showPage('history')">
+                <span class="tab-icon">📜</span>
+                记录
+            </div>
+        </div>
+    </div>
+    
+    <!-- 结果弹窗 -->
+    <div class="modal-overlay" id="resultModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            
+            <div class="result-header">
+                <div class="result-char" id="resultChar"></div>
+                <div class="result-question" id="resultQuestion"></div>
+                <div class="result-tags">
+                    <span class="tag" id="resultStrokes"></span>
+                    <span class="tag" id="resultWuxing"></span>
+                    <span class="tag" id="resultStructure"></span>
+                    <span class="tag gold" id="resultJixiong"></span>
+                </div>
+            </div>
+            
+            <div class="result-section">
+                <h3>📝 总体分析</h3>
+                <p id="resultBrief"></p>
+            </div>
+            
+            <div class="result-section">
+                <h3>✍️ 针对「<span id="targetQuestion"></span>」</h3>
+                <p id="resultTargeted"></p>
+            </div>
+            
+            <div class="result-section">
+                <h3>💼 事业</h3>
+                <p id="resultCareer"></p>
+            </div>
+            
+            <div class="result-section">
+                <h3>💰 财运</h3>
+                <p id="resultWealth"></p>
+            </div>
+            
+            <div class="result-section">
+                <h3>💕 感情</h3>
+                <p id="resultLove"></p>
+            </div>
+            
+            <div class="result-section">
+                <h3>💪 健康</h3>
+                <p id="resultHealth"></p>
+            </div>
+            
+            <div class="result-section">
+                <h3>✨ 开运建议</h3>
+                <p id="resultSuggestion"></p>
+            </div>
+            
+            <button class="btn-new" onclick="closeModal(); reset();">再测一字</button>
+        </div>
+    </div>
+    
+    <input type="file" id="fileInput" accept="image/*" capture="environment">
+    
+    <script>
+        const API_BASE = '';
+        let currentPage = 'home';
+        let selectedQ = '';
+        
+        function showPage(page) {
+            currentPage = page;
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + page).classList.add('active');
+            if (page === 'history') loadHistory();
+        }
+        
+        // 选择问题
+        function selectQuestion(q) {
+            selectedQ = q;
+            document.querySelectorAll('.question-tag').forEach(t => t.classList.remove('selected'));
+            event.target.classList.add('selected');
+            document.getElementById('customQuestion').value = q;
+        }
+        
+        // 获取最终问题
+        function getQuestion() {
+            const custom = document.getElementById('customQuestion').value.trim();
+            return custom || selectedQ || '综合运势';
+        }
+        
+        // 显示手动输入
+        function showManualInput() {
+            document.getElementById('inputArea').classList.toggle('show');
+        }
+        
+        // 拍照
+        function captureImage() {
+            document.getElementById('fileInput').click();
+        }
+        
+        document.getElementById('fileInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const question = getQuestion();
+            if (!question) {
+                alert('请先选择想问的事情');
+                return;
+            }
+            
+            const loading = document.getElementById('loading');
+            loading.classList.add('show');
+            
+            const reader = new FileReader();
+            reader.onload = async function(evt) {
+                const base64 = evt.target.result;
+                
+                try {
+                    const response = await fetch(API_BASE + '/api/ocr', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({image: base64})
+                    });
+                    
+                    const data = await response.json();
+                    
+                    loading.classList.remove('show');
+                    
+                    if (data.char) {
+                        // 识别成功，直接测字
+                        doCezi(data.char, question);
+                    } else {
+                        alert('未识别到文字，请重试或手动输入');
+                    }
+                } catch (err) {
+                    loading.classList.remove('show');
+                    alert('识别失败，请重试');
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+        
+        // 手动输入后直接测字
+        document.getElementById('charInput').addEventListener('input', function(e) {
+            const char = e.target.value.trim();
+            const question = getQuestion();
+            
+            if (char && question) {
+                // 自动测字
+                doCezi(char, question);
+            }
+        });
+        
+        // 测字API
+        async function doCezi(char, question) {
+            const loading = document.getElementById('loading');
+            loading.classList.add('show');
+            
+            try {
+                const response = await fetch(API_BASE + '/api/cezi', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        char: char,
+                        question: question,
+                        openid: 'guest_' + Date.now()
+                    })
+                });
+                
+                const data = await response.json();
+                loading.classList.remove('show');
+                
+                if (data.data) {
+                    showResult(data.data, question);
+                } else {
+                    alert(data.message || '测算失败');
+                }
+            } catch (e) {
+                loading.classList.remove('show');
+                alert('网络错误，请重试');
+            }
+        }
+        
+        // 显示结果
+        function showResult(data, question) {
+            const modal = document.getElementById('resultModal');
+            
+            document.getElementById('resultChar').textContent = data.char;
+            document.getElementById('resultQuestion').textContent = question;
+            document.getElementById('targetQuestion').textContent = question;
+            document.getElementById('resultStrokes').textContent = data.analysis.strokes + '画';
+            document.getElementById('resultWuxing').textContent = data.analysis.wuxing + '行';
+            document.getElementById('resultStructure').textContent = data.analysis.structure;
+            document.getElementById('resultJixiong').textContent = data.analysis.jixiong;
+            
+            // 针对性分析
+            const targeted = generateTargetedAnalysis(question, data);
+            
+            document.getElementById('resultBrief').textContent = data.result.brief;
+            document.getElementById('resultTargeted').textContent = targeted;
+            document.getElementById('resultCareer').textContent = data.result.career;
+            document.getElementById('resultWealth').textContent = data.result.wealth;
+            document.getElementById('resultLove').textContent = data.result.love;
+            document.getElementById('resultHealth').textContent = data.result.health;
+            document.getElementById('resultSuggestion').textContent = data.result.suggestion;
+            
+            modal.classList.add('show');
+        }
+        
+        // 生成针对性分析
+        function generateTargetedAnalysis(question, data) {
+            const q = question.toLowerCase();
+            const char = data.char;
+            const wuxing = data.analysis.wuxing;
+            const jixiong = data.analysis.jixiong;
+            
+            if (q.includes('考试')) {
+                return `「${char}」字预示考试运势${jixiong}。${wuxing}属性分析：${getExamAdvice(wuxing)}整体来看，保持良好心态，自有贵人相助。`;
+            } else if (q.includes('事业') || q.includes('工作')) {
+                return `「${char}」字显示事业运势${jixiong}。${wuxing}属性分析：${getCareerAdvice(wuxing)}宜把握机遇，主动出击。`;
+            } else if (q.includes('财运') || q.includes('钱')) {
+                return `「${char}」字预示财运${jixiong}。${wuxing}属性分析：${getWealthAdvice(wuxing)}理财需谨慎，不宜冲动。`;
+            } else if (q.includes('感情')) {
+                return `「${char}」字显示感情运势${jixiong}。${data.analysis.structure}结构分析：${getLoveAdvice(data.analysis.structure)}需要双方共同经营。`;
+            } else if (q.includes('健康')) {
+                return `「${char}」字健康宫${wuxing}属性明显。${getHealthAdvice(wuxing)}注意调养，身体是根本。`;
+            } else if (q.includes('出行')) {
+                return `「${char}」字出行平安指数${jixiong}。${wuxing}属性提示：${getTravelAdvice(wuxing)}出行宜谨慎，注意安全。`;
+            } else {
+                return `「${char}」字整体运势${jixiong}，${wuxing}属性明显。万物皆有数，顺势而为，自有福报。`;
+            }
+        }
+        
+        function getExamAdvice(wuxing) {
+            const m = {'木':'学业宫木气旺，利于考试发挥','火':'宜静心养神，防过度紧张','土':'基础扎实，稳步应考','金':'思维敏捷，利于理科','水':'智慧生财，灵活应变'};
+            return m[wuxing] || '运势平稳';
+        }
+        
+        function getCareerAdvice(wuxing) {
+            const m = {'木':'宜开创进取','火':'防急躁冒进','土':'宜稳健守成','金':'果断决策','水':'灵活应对'};
+            return m[wuxing] || '运势平稳';
+        }
+        
+        function getWealthAdvice(wuxing) {
+            const m = {'木':'正财旺','火':'财来财去','土':'积少成多','金':'正偏财佳','水':'流动生财'};
+            return m[wuxing] || '财运平稳';
+        }
+        
+        function getLoveAdvice(structure) {
+            const m = {'左右结构':'互补互助','上下结构':'相互理解','半包围结构':'包容保护','独体字':'注意换位'};
+            return m[structure] || '平稳发展';
+        }
+        
+        function getHealthAdvice(wuxing) {
+            const m = {'木':'注意肝胆','火':'注意心血管','土':'注意脾胃','金':'注意肺部','水':'注意肾泌尿'};
+            return m[wuxing] || '身体康健';
+        }
+        
+        function getTravelAdvice(wuxing) {
+            const m = {'木':'出行顺利','火':'注意安全','土':'平安是福','金':'一路平安','水':'注意天气'};
+            return m[wuxing] || '出行平安';
+        }
+        
+        function closeModal() {
+            document.getElementById('resultModal').classList.remove('show');
+        }
+        
+        function reset() {
+            document.getElementById('charInput').value = '';
+            document.getElementById('customQuestion').value = '';
+            selectedQ = '';
+            document.querySelectorAll('.question-tag').forEach(t => t.classList.remove('selected'));
+            document.getElementById('inputArea').classList.remove('show');
+        }
+        
+        // 历史记录
+        async function loadHistory() {
+            const list = document.getElementById('historyList');
+            list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:40px;">暂无记录</p>';
+        }
+    </script>
+</body>
+</html>
