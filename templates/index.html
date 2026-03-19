@@ -489,6 +489,21 @@
             </div>
             
             <div class="result-section">
+                <h3>🔤 字形拆解</h3>
+                <p id="resultSplit"></p>
+            </div>
+            
+            <div class="result-section">
+                <h3>☯️ 梅花易数</h3>
+                <p id="resultMeihua"></p>
+            </div>
+            
+            <div class="result-section">
+                <h3>🧭 方位影响</h3>
+                <p id="resultDirection"></p>
+            </div>
+            
+            <div class="result-section">
                 <h3>✍️ 针对「<span id="targetQuestion"></span>」</h3>
                 <p id="resultTargeted"></p>
             </div>
@@ -698,6 +713,33 @@
             const targeted = generateTargetedAnalysis(question, data);
             
             document.getElementById('resultBrief').textContent = data.result.brief;
+            
+            // 字形拆解
+            const splitText = data.split_text || '';
+            const splitMeaning = data.split_meaning || '';
+            document.getElementById('resultSplit').textContent = splitText ? splitText + ' - ' + splitMeaning : '';
+            
+            // 梅花易数
+            const m = data.meihua;
+            if (m) {
+                const meihuaText = m.time?.shichen + '时' + m.gua + '卦 - ' + (data.analysis?.gua_meaning || '');
+                document.getElementById('resultMeihua').textContent = meihuaText;
+            }
+            
+            // 方位影响
+            const dir = data.direction || '';
+            const dirDesc = {
+                '北': '北方水位，主智慧与事业机会',
+                '南': '南方火位，主文化与礼仪',
+                '东': '东方木位，主成长与创新',
+                '西': '西方金位，主财运与口才',
+                '东北': '东北土位，主稳定与积累',
+                '西南': '西南土位，主人脉与资源',
+                '东南': '东南木位，主变通与机遇',
+                '西北': '西北金位，主决策与领导'
+            };
+            document.getElementById('resultDirection').textContent = dir + ' - ' + (dirDesc[dir] || '');
+            
             document.getElementById('resultTargeted').textContent = targeted;
             document.getElementById('resultCareer').textContent = data.result.career;
             document.getElementById('resultWealth').textContent = data.result.wealth;
@@ -789,11 +831,14 @@
                 jixiong: result.analysis?.jixiong || '',
                 strokes: result.analysis?.strokes || 0,
                 brief: result.result?.brief || '',
+                split_text: result.split_text || '',
+                split_meaning: result.split_meaning || '',
                 career: result.result?.career || '',
                 wealth: result.result?.wealth || '',
                 love: result.result?.love || '',
                 health: result.result?.health || '',
                 suggestion: result.result?.suggestion || '',
+                direction: result.direction || '',
                 meihua: result.meihua || null,
                 deep_analysis: result.deep_analysis || '',
                 time: new Date().toISOString()
@@ -862,12 +907,28 @@
             document.getElementById('resultHealth').textContent = item.health;
             document.getElementById('resultSuggestion').textContent = item.suggestion;
             
+            // 字形拆解
+            document.getElementById('resultSplit').textContent = item.split_text ? item.split_text + ' - ' + item.split_meaning : '';
+            
             // 梅花易数
             if (item.meihua) {
                 const m = item.meihua;
-                document.getElementById('meihuaInfo').textContent = 
-                    '时辰：' + m.time?.shichen + '（' + m.time?.day_gan + '日）\n方位：' + m.direction + '\n本卦：' + m.gua;
+                document.getElementById('resultMeihua').textContent = 
+                    m.time?.shichen + '时 ' + m.gua + '卦';
             }
+            
+            // 方位影响
+            const dirDesc = {
+                '北': '北方水位，主智慧与事业机会',
+                '南': '南方火位，主文化与礼仪',
+                '东': '东方木位，主成长与创新',
+                '西': '西方金位，主财运与口才',
+                '东北': '东北土位，主稳定与积累',
+                '西南': '西南土位，主人脉与资源',
+                '东南': '东南木位，主变通与机遇',
+                '西北': '西北金位，主决策与领导'
+            };
+            document.getElementById('resultDirection').textContent = item.direction ? item.direction + ' - ' + (dirDesc[item.direction] || '') : '';
             
             // 深度分析
             const deepSection = document.getElementById('deepSection');
