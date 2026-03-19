@@ -443,8 +443,18 @@
     <!-- 结果弹窗 -->
     <div class="modal-overlay" id="resultModal">
         <div class="modal-content">
-            <button class="modal-close" onclick="closeModal()">✕</button>
+            <button class="modal-close" onclick="closeModal()" style="display:none;">✕</button>
             
+            <!-- 思考中弹窗 -->
+            <div id="thinkingModal" style="text-align:center;padding:40px 20px;">
+                <div style="font-size:48px;margin-bottom:20px;">🔮</div>
+                <div style="font-size:20px;color:#f59e0b;margin-bottom:30px;font-family:serif;">老朽正在推演...</div>
+                <div id="thinkingText" style="color:#94a3b8;font-size:14px;line-height:2;font-family:serif;"></div>
+            </div>
+            
+            <!-- 结果显示 -->
+            <div id="resultContent" style="display:none;">
+            <button class="modal-close" onclick="closeModal()">✕</button>
             <div class="result-header">
                 <div class="result-char" id="resultChar"></div>
                 <div class="result-question" id="resultQuestion"></div>
@@ -492,6 +502,7 @@
             </div>
             
             <button class="btn-new" onclick="closeModal(); reset();">再测一字</button>
+            </div>
         </div>
     </div>
     
@@ -588,8 +599,29 @@
         
         // 测字API
         async function doCezi(char, question) {
-            const loading = document.getElementById('loading');
-            loading.classList.add('show');
+            // 显示弹窗思考动画
+            const modal = document.getElementById('resultModal');
+            const thinkingModal = document.getElementById('thinkingModal');
+            const resultContent = document.getElementById('resultContent');
+            
+            modal.classList.add('show');
+            thinkingModal.style.display = 'block';
+            resultContent.style.display = 'none';
+            
+            // 显示老相师言辞
+            const thinkingText = document.getElementById('thinkingText');
+            const messages = [
+                "观字形，知吉凶...",
+                "笔画数理，五行定位...",
+                "结合时辰，推演气运...",
+                "梅花易数，起卦推算...",
+                "整合诸象，得出结论..."
+            ];
+            
+            for (let msg of messages) {
+                thinkingText.innerHTML += msg + "<br>";
+                await new Promise(r => setTimeout(r, 800));
+            }
             
             try {
                 const response = await fetch(API_BASE + '/api/cezi', {
@@ -603,7 +635,10 @@
                 });
                 
                 const data = await response.json();
-                loading.classList.remove('show');
+                
+                // 隐藏思考，显示结果
+                thinkingModal.style.display = 'none';
+                resultContent.style.display = 'block';
                 
                 if (data.data) {
                     showResult(data.data, question);
