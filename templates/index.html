@@ -584,9 +584,12 @@
         // 选择问题
         function selectQuestion(q) {
             selectedQ = q;
-            document.querySelectorAll('.question-tag').forEach(t => t.classList.remove('selected'));
-            event.target.classList.add('selected');
             document.getElementById('customQuestion').value = q;
+            // Update button states
+            document.querySelectorAll('.question-tag').forEach(t => {
+                t.classList.remove('selected');
+                if (t.textContent.includes(q.charAt(0))) t.classList.add('selected');
+            });
         }
         
         // 获取最终问题
@@ -764,11 +767,13 @@
                 
                 const data = await response.json();
                 
-                // 隐藏思考过程，显示结果
-                document.getElementById('thinkingProcess').style.display = 'none';
-                modalLoading.style.display = 'none';
-                document.getElementById('thinkingSteps').innerHTML = '';
-                if (resultContent) resultContent.style.display = 'block';
+                // 强制隐藏思考过程
+                const thinkingEl = document.getElementById('thinkingProcess');
+                const loadingEl = document.getElementById('modalLoading');
+                const stepsEl = document.getElementById('thinkingSteps');
+                if (thinkingEl) thinkingEl.style.display = 'none';
+                if (loadingEl) loadingEl.style.display = 'none';
+                if (stepsEl) stepsEl.innerHTML = '';
                 
                 if (data.data) {
                     showResult(data.data, data.verbose || '', question);
