@@ -1,0 +1,20 @@
+# serverless.yml
+# 使用 Serverless Framework 部署
+
+component: scf
+name: cezi-api
+inputs:
+  name: cezi-api
+  runtime: Python3.10
+  handler: index.main_handler
+  description: 测字应用API
+  timeout: 60
+  memorySize: 256
+  events:
+    - apigw:
+        name: cezi_api
+        endpoints:
+          - path: /api/cezi
+            method: POST
+          - path: /api/ocr
+            method: POST

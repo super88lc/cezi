@@ -1,0 +1,54 @@
+{
+  "/Users/apple/.openclaw/workspace/zi-cesuan/serverless.yml": {
+    "versionFramework": "4.33.0",
+    "servicePath": "/Users/apple/.openclaw/workspace/zi-cesuan/serverless.yml",
+    "serviceConfigFileName": "serverless.yml",
+    "service": {
+      "component": "scf",
+      "name": "cezi-api",
+      "inputs": {
+        "name": "cezi-api",
+        "runtime": "Python3.10",
+        "handler": "index.main_handler",
+        "description": "测字应用API",
+        "timeout": 60,
+        "memorySize": 256,
+        "region": "ap-guangzhou",
+        "events": [
+          {
+            "apigw": {
+              "name": "cezi_api",
+              "protocols": [
+                "http"
+              ],
+              "endpoints": [
+                {
+                  "path": "/api/cezi",
+                  "method": "POST"
+                },
+                {
+                  "path": "/api/ocr",
+                  "method": "POST"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "error": {
+      "message": "You must sign in or use a license key with Serverless Framework V.4 and later versions. Please use \"serverless login\".",
+      "stack": "Error: You must sign in or use a license key with Serverless Framework V.4 and later versions. Please use \"serverless login\".\n    at Authentication.getAuthenticatedData (file:///Users/apple/.serverless/releases/4.33.0/package/dist/sf-core.js:891:11566)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async Authentication.authenticate (file:///Users/apple/.serverless/releases/4.33.0/package/dist/sf-core.js:894:4133)\n    at async TraditionalRunner.resolveVariablesAndAuthenticate (file:///Users/apple/.serverless/releases/4.33.0/package/dist/sf-core.js:902:2394)\n    at async TraditionalRunner.run (file:///Users/apple/.serverless/releases/4.33.0/package/dist/sf-core.js:2348:27823)\n    at async route (file:///Users/apple/.serverless/releases/4.33.0/package/dist/sf-core.js:2519:2848)\n    at async Object.run (file:///Users/apple/.serverless/releases/4.33.0/package/dist/sf-core.js:2520:3886)\n    at async run2 (file:///Users/apple/.serverless/releases/4.33.0/package/dist/sf-core.js:2520:5040)"
+    },
+    "serviceRawFile": "component: scf\nname: cezi-api\ninputs:\n  name: cezi-api\n  runtime: Python3.10\n  handler: index.main_handler\n  description: 测字应用API\n  timeout: 60\n  memorySize: 256\n  region: ap-guangzhou\n  events:\n    - apigw:\n        name: cezi_api\n        protocols:\n          - http\n        endpoints:\n          - path: /api/cezi\n            method: POST\n          - path: /api/ocr\n            method: POST\n",
+    "command": [
+      "deploy"
+    ],
+    "options": {},
+    "serviceProviderAwsCfStackId": null,
+    "serviceProviderAwsCfStackCreated": null,
+    "serviceProviderAwsCfStackUpdated": null,
+    "serviceProviderAwsCfStackStatus": null,
+    "serviceProviderAwsCfStackOutputs": null
+  }
+}
