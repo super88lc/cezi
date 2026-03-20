@@ -430,15 +430,9 @@
                     拍照识字
                 </button>
                 
-                <button type="button" class="manual-input" onclick="showManualInput(); console.log('clicked')">
+                <button type="button" class="manual-input" onclick="showManualInputModal()" style="width:calc(100% - 40px);margin:10px 20px;">
                     或手动输入文字 →
                 </button>
-                
-                <!-- 手动输入区域 -->
-                <div class="input-area" id="inputArea">
-                    <input type="text" class="char-input" id="charInput" placeholder="请写一个字" maxlength="1">
-                    <button class="btn-primary" onclick="submitManualCezi()" style="margin-top:12px;width:100%;">开始测字</button>
-                </div>
             </div>
             
             <div class="loading" id="loading">
@@ -683,6 +677,31 @@
                 return;
             }
             
+            doCezi(char, question);
+        }
+        
+        // 手动输入弹窗
+        function showManualInputModal() {
+            document.getElementById('manualInputModal').style.display = 'flex';
+            document.getElementById('charInputModal').focus();
+        }
+        
+        function closeManualInputModal() {
+            document.getElementById('manualInputModal').style.display = 'none';
+            document.getElementById('charInputModal').value = '';
+            document.getElementById('questionSelectModal').value = '';
+        }
+        
+        function submitManualFromModal() {
+            const char = document.getElementById('charInputModal').value.trim();
+            const question = document.getElementById('questionSelectModal').value || '综合运势';
+            
+            if (!char) {
+                alert('请先输入一个汉字');
+                return;
+            }
+            
+            closeManualInputModal();
             doCezi(char, question);
         }
         
