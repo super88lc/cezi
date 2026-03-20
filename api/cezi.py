@@ -420,6 +420,10 @@ if __name__ == "__main__":
     print("=" * 50)
     app.run(host="0.0.0.0", port=5000, debug=True)
 
-# Vercel handler
-def handler(request):
-    return app(request.environ, lambda status, headers: (status, headers))
+import vercel
+from app import app as flask_app
+
+def handler(req, resp):
+    """Vercel serverless function handler"""
+    return vercel.push(flask_app, req, resp)
+
