@@ -153,6 +153,10 @@
             background: rgba(99,102,241,0.2);
             border-radius: 12px;
             margin: 10px 20px;
+            border: none;
+            width: calc(100% - 40px);
+            z-index: 100;
+            position: relative;
         }
         
         .manual-input:active {
@@ -426,9 +430,9 @@
                     拍照识字
                 </button>
                 
-                <div class="manual-input" onclick="showManualInput(); console.log('clicked')">
+                <button type="button" class="manual-input" onclick="showManualInput(); console.log('clicked')">
                     或手动输入文字 →
-                </div>
+                </button>
                 
                 <!-- 手动输入区域 -->
                 <div class="input-area" id="inputArea">
