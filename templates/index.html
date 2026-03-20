@@ -543,6 +543,25 @@
         </div>
     </div>
     
+    <!-- 手动输入弹窗 -->
+    <div class="modal-overlay" id="manualInputModal" style="display:none;z-index:2000;">
+        <div class="modal" style="max-width:360px;padding:30px 20px;">
+            <h3 style="text-align:center;margin-bottom:20px;color:var(--gold);">请输入文字</h3>
+            <input type="text" class="char-input" id="charInputModal" placeholder="请写一个字" maxlength="1" style="margin-bottom:20px;">
+            <select id="questionSelectModal" style="width:100%;padding:12px;margin-bottom:20px;background:rgba(0,0,0,0.3);border:2px solid rgba(99,102,241,0.3);border-radius:12px;color:var(--text);font-size:16px;">
+                <option value="">选择想问的事情</option>
+                <option value="事业">事业</option>
+                <option value="财运">财运</option>
+                <option value="感情">感情</option>
+                <option value="健康">健康</option>
+                <option value="学业">学业</option>
+                <option value="综合运势">综合运势</option>
+            </select>
+            <button class="btn-primary" onclick="submitManualFromModal()" style="width:100%;">开始测字</button>
+            <button onclick="closeManualInputModal()" style="margin-top:10px;width:100%;background:transparent;border:none;color:var(--text-muted);padding:10px;">取消</button>
+        </div>
+    </div>
+    
     <input type="file" id="fileInput" accept="image/*" capture="environment">
     
     <script>
