@@ -427,6 +427,7 @@
                 <!-- 手动输入区域 -->
                 <div class="input-area" id="inputArea">
                     <input type="text" class="char-input" id="charInput" placeholder="请写一个字" maxlength="1">
+                    <button class="btn-primary" onclick="submitManualCezi()" style="margin-top:12px;width:100%;">开始测字</button>
                 </div>
             </div>
             
@@ -643,15 +644,34 @@
         });
         
         // 手动输入后直接测字
-        document.getElementById('charInput').addEventListener('input', function(e) {
-            const char = e.target.value.trim();
-            const question = getQuestion();
-            
-            if (char && question) {
-                // 自动测字
-                doCezi(char, question);
+        // 手动输入测字 - 按回车键触发
+        document.getElementById('charInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const char = e.target.value.trim();
+                const question = getQuestion();
+                
+                if (char && question) {
+                    doCezi(char, question);
+                }
             }
         });
+        
+        // 点击测字按钮触发
+        function submitManualCezi() {
+            const char = document.getElementById('charInput').value.trim();
+            const question = getQuestion();
+            
+            if (!char) {
+                alert('请先输入一个汉字');
+                return;
+            }
+            if (!question) {
+                alert('请先选择要问的事情');
+                return;
+            }
+            
+            doCezi(char, question);
+        }
         
         // 测字API
         async function doCezi(char, question) {
