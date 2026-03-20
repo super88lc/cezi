@@ -580,7 +580,10 @@
         
         // 显示手动输入
         function showManualInput() {
-            document.getElementById('inputArea').classList.toggle('show');
+            console.log('showManualInput clicked');
+            const area = document.getElementById('inputArea');
+            area.classList.toggle('show');
+            console.log('inputArea class:', area.className);
         }
         
         // 拍照
