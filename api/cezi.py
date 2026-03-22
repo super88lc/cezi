@@ -111,7 +111,7 @@ import requests
 from cezi_core_v3 import generate_enhanced_result, format_verbose
 
 app = Flask(__name__, template_folder='templates')
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]}}, supports_credentials=True)
 
 # ========== 配置 ==========
 # 百度OCR
@@ -175,9 +175,32 @@ def generate_nonce():
 
 # ========== 页面路由 ==========
 
+import os
+
 @app.route("/")
 def index():
-    return render_template("index.html")
+    # 直接读取静态HTML文件
+    template_path = os.path.join(os.path.dirname(__file__), '..', 'templates', 'index.html')
+    try:
+        with open(template_path, 'r', encoding='utf-8') as f:
+            return f.read(), 200, {'Content-Type': 'text/html'}
+    except Exception as e:
+        return f"Error: {str(e)}", 500
+
+@app.route("/admin")
+def admin_page():
+    # 读取管理后台HTML
+    admin_path = os.path.join(os.path.dirname(__file__), '..', 'admin', 'index.html')
+    try:
+        with open(admin_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            # 如果是重定向页面，直接返回内嵌的管理界面
+            if 'Redirecting' in content:
+                from admin.app import admin_html
+                return admin_html, 200, {'Content-Type': 'text/html'}
+            return content, 200, {'Content-Type': 'text/html'}
+    except Exception as e:
+        return f"Error: {str(e)}", 500
 
 # ========== 测字API ==========
 
@@ -420,10 +443,168 @@ if __name__ == "__main__":
     print("=" * 50)
     app.run(host="0.0.0.0", port=5000, debug=True)
 
-import vercel
-from app import app as flask_app
+# Vercel handler - export app for Vercel
+# The app is already defined above as `app`
 
-def handler(req, resp):
-    """Vercel serverless function handler"""
-    return vercel.push(flask_app, req, resp)
 
+# ========== Admin API (JSON文件存储) ==========
+import os
+import json
+import datetime
+from flask import jsonify
+
+DATA_FILE = '/tmp/admin_data.json'
+
+def load_data():
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, 'r') as f:
+                return json.load(f)
+        except:
+            pass
+    return {"prompts": [], "models": [], "history": []}
+
+def save_data(data):
+    with open(DATA_FILE, 'w') as f:
+        json.dump(data, f, ensure_ascii=False)
+
+def init_admin_data():
+    data = load_data()
+    if not data.get('prompts'):
+        data['prompts'] = [{
+            "id": 1,
+            "name": "默认模板",
+            "template": "你是一位精通易经的测字先生，为人测字解惑。\n\n测字信息：\n- 所测之字：{char}\n- 所问之事：{question}\n- 测字方位：{direction}\n- 测字时辰：{time}\n\n请根据以上信息，以古代算命先生的语气对此字进行解析。要求：\n1. 先解释字形结构与含义\n2. 结合五行笔画分析\n3. 结合梅花易数解读方位与时辰\n4. 给出针对所问之事的具体建议\n5. 语气要像一位经验丰富的老师傅，不要像AI",
+            "is_active": 1,
+            "created_at": datetime.datetime.now().isoformat(),
+            "updated_at": datetime.datetime.now().isoformat()
+        }]
+    if not data.get('models'):
+        data['models'] = [{
+            "id": 1, "name": "MiniMax", "provider": "minimax", "api_key": "", 
+            "endpoint": "https://api.minimaxi.com/anthropic/v1", "model_name": "MiniMax-M2.5",
+            "is_active": 1, "created_at": datetime.datetime.now().isoformat()
+        }]
+    save_data(data)
+
+init_admin_data()
+
+@app.route('/api/admin/prompt/list', methods=['GET'])
+def list_prompts():
+    return jsonify(load_data().get('prompts', []))
+
+@app.route('/api/admin/prompt/save', methods=['POST'])
+def save_prompt():
+    try:
+        req = request.json
+        if not req or not req.get('name') or not req.get('template'):
+            return jsonify({'success': False, 'error': 'Missing name or template'}), 400
+        
+        data = load_data()
+        now = datetime.datetime.now().isoformat()
+        
+        if req.get('id'):
+            for p in data['prompts']:
+                if p['id'] == req['id']:
+                    p['name'] = req['name']
+                    p['template'] = req['template']
+                    p['updated_at'] = now
+                    break
+        else:
+            new_id = max([p['id'] for p in data['prompts']], default=0) + 1
+            data['prompts'].append({
+                "id": new_id, "name": req['name'], "template": req['template'],
+                "is_active": 0, "created_at": now, "updated_at": now
+            })
+        
+        save_data(data)
+        return jsonify({'success': True})
+    except Exception as e:
+        import traceback
+        return jsonify({'success': False, 'error': str(e), 'trace': traceback.format_exc()}), 500
+
+@app.route('/api/admin/prompt/set_active', methods=['POST'])
+def set_active_prompt():
+    req = request.json
+    data = load_data()
+    for p in data['prompts']:
+        p['is_active'] = 1 if p['id'] == req['id'] else 0
+    save_data(data)
+    return jsonify({'success': True})
+
+@app.route('/api/admin/history/list', methods=['GET'])
+def list_history():
+    page = request.args.get('page', 1, type=int)
+    limit = request.args.get('limit', 20, type=int)
+    offset = (page - 1) * limit
+    history = load_data().get('history', [])
+    total = len(history)
+    return jsonify({'total': total, 'page': page, 'limit': limit, 'data': history[offset:offset+limit]})
+
+@app.route('/api/admin/history/<int:id>', methods=['GET'])
+def get_history(id):
+    history = load_data().get('history', [])
+    for h in history:
+        if h.get('id') == id:
+            return jsonify(h)
+    return jsonify({})
+
+@app.route('/api/admin/models/list', methods=['GET'])
+def list_models():
+    return jsonify(load_data().get('models', []))
+
+@app.route('/api/admin/models/save', methods=['POST'])
+def save_model():
+    try:
+        req = request.json
+        if not req or not req.get('name') or not req.get('provider'):
+            return jsonify({'success': False, 'error': 'Missing name or provider'}), 400
+        
+        data = load_data()
+        now = datetime.datetime.now().isoformat()
+        
+        if req.get('id'):
+            for m in data['models']:
+                if m['id'] == req['id']:
+                    m['name'] = req['name']
+                    m['provider'] = req.get('provider')
+                    m['endpoint'] = req.get('endpoint', '')
+                    m['model_name'] = req.get('model_name', '')
+                    m['api_key'] = req.get('api_key', '')
+                    m['updated_at'] = now
+                    break
+        else:
+            new_id = max([m['id'] for m in data['models']], default=0) + 1
+            data['models'].append({
+                "id": new_id,
+                "name": req['name'],
+                "provider": req['provider'],
+                "endpoint": req.get('endpoint', ''),
+                "model_name": req.get('model_name', ''),
+                "api_key": req.get('api_key', ''),
+                "is_active": 0,
+                "created_at": now,
+                "updated_at": now
+            })
+        
+        save_data(data)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/models/set_active', methods=['POST'])
+def set_active_model():
+    req = request.json
+    data = load_data()
+    for m in data['models']:
+        m['is_active'] = 1 if m['id'] == req['id'] else 0
+    save_data(data)
+    return jsonify({'success': True})
+
+# 获取活跃的Prompt模板
+def get_active_prompt_template():
+    data = load_data()
+    for p in data.get('prompts', []):
+        if p.get('is_active') == 1:
+            return p.get('template')
+    return None
