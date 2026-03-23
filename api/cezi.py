@@ -502,18 +502,25 @@ def save_prompt():
         
         data = load_data()
         now = datetime.datetime.now().isoformat()
+        new_name = req['name'].strip()
+        
+        # 检查名称重复
+        current_id = req.get('id')
+        for p in data['prompts']:
+            if p['name'].strip() == new_name and p['id'] != current_id:
+                return jsonify({'success': False, 'error': '模板名称已存在，请使用不同的名称'}), 400
         
         if req.get('id'):
             for p in data['prompts']:
                 if p['id'] == req['id']:
-                    p['name'] = req['name']
+                    p['name'] = new_name
                     p['template'] = req['template']
                     p['updated_at'] = now
                     break
         else:
             new_id = max([p['id'] for p in data['prompts']], default=0) + 1
             data['prompts'].append({
-                "id": new_id, "name": req['name'], "template": req['template'],
+                "id": new_id, "name": new_name, "template": req['template'],
                 "is_active": 0, "created_at": now, "updated_at": now
             })
         
@@ -562,11 +569,18 @@ def save_model():
         
         data = load_data()
         now = datetime.datetime.now().isoformat()
+        new_name = req['name'].strip()
+        
+        # 检查名称重复
+        current_id = req.get('id')
+        for m in data['models']:
+            if m['name'].strip() == new_name and m['id'] != current_id:
+                return jsonify({'success': False, 'error': '模型名称已存在，请使用不同的名称'}), 400
         
         if req.get('id'):
             for m in data['models']:
                 if m['id'] == req['id']:
-                    m['name'] = req['name']
+                    m['name'] = new_name
                     m['provider'] = req.get('provider')
                     m['endpoint'] = req.get('endpoint', '')
                     m['model_name'] = req.get('model_name', '')
@@ -577,7 +591,7 @@ def save_model():
             new_id = max([m['id'] for m in data['models']], default=0) + 1
             data['models'].append({
                 "id": new_id,
-                "name": req['name'],
+                "name": new_name,
                 "provider": req['provider'],
                 "endpoint": req.get('endpoint', ''),
                 "model_name": req.get('model_name', ''),
