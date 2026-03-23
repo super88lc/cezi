@@ -245,12 +245,23 @@ def cezi():
     
     increment_count(openid)
     
-    # 保存历史
+    # 保存用户历史（内存中，完整保存）
     user = get_user(openid)
     user["history"].append({
         "char": char,
         "time": time.time(),
         "brief": f"{char}字，{result['analysis']['jixiong']}"
+    })
+    
+    # 保存服务器端历史（Redis，最多100条）
+    add_server_history({
+        "id": int(time.time() * 1000),
+        "char": char,
+        "question": question,
+        "direction": direction,
+        "time": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "result": result['analysis']['jixiong'],
+        "openid": openid[:8] + "***"  # 脱敏处理
     })
     
     # 格式化输出
@@ -455,6 +466,8 @@ from flask import jsonify
 
 DATA_FILE = '/tmp/admin_data.json'
 DATA_KEY = 'cezi_admin_data'
+SERVER_HISTORY_KEY = 'cezi_server_history'
+MAX_SERVER_HISTORY = 100  # 服务器端最多保留100条
 
 def get_kv_client():
     """动态获取KV客户端，每次调用时检查环境变量"""
@@ -484,7 +497,7 @@ def load_data():
                 return json.load(f)
         except:
             pass
-    return {"prompts": [], "models": [], "history": []}
+    return {"prompts": [], "models": [], "server_history": []}
 
 def save_data(data):
     json_str = json.dumps(data, ensure_ascii=False)
@@ -499,6 +512,39 @@ def save_data(data):
     # 回退到本地文件
     with open(DATA_FILE, 'w') as f:
         f.write(json_str)
+
+def load_server_history():
+    """加载服务器端历史记录"""
+    client = get_kv_client()
+    if client:
+        try:
+            data = client.get(SERVER_HISTORY_KEY)
+            if data:
+                return json.loads(data)
+        except:
+            pass
+    return []
+
+def save_server_history(history):
+    """保存服务器端历史记录（最多100条）"""
+    # 只保留最近100条
+    history = history[-MAX_SERVER_HISTORY:]
+    json_str = json.dumps(history, ensure_ascii=False)
+    client = get_kv_client()
+    if client:
+        try:
+            client.set(SERVER_HISTORY_KEY, json_str)
+        except:
+            pass
+
+def add_server_history(item):
+    """添加服务器端历史记录"""
+    history = load_server_history()
+    history.append(item)
+    # 只保留最近100条
+    if len(history) > MAX_SERVER_HISTORY:
+        history = history[-MAX_SERVER_HISTORY:]
+    save_server_history(history)
 
 def init_admin_data():
     data = load_data()
@@ -587,16 +633,20 @@ def preview_prompt():
 
 @app.route('/api/admin/history/list', methods=['GET'])
 def list_history():
+    """获取服务器端历史记录（最多100条）"""
     page = request.args.get('page', 1, type=int)
     limit = request.args.get('limit', 20, type=int)
     offset = (page - 1) * limit
-    history = load_data().get('history', [])
+    history = load_server_history()
     total = len(history)
+    # 反转顺序，最新的在前
+    history = list(reversed(history))
     return jsonify({'total': total, 'page': page, 'limit': limit, 'data': history[offset:offset+limit]})
 
 @app.route('/api/admin/history/<int:id>', methods=['GET'])
 def get_history(id):
-    history = load_data().get('history', [])
+    """获取单条历史记录详情"""
+    history = load_server_history()
     for h in history:
         if h.get('id') == id:
             return jsonify(h)
