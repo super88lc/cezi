@@ -467,21 +467,32 @@ from flask import jsonify
 
 DATA_FILE = '/tmp/admin_data.json'
 DATA_KEY = 'cezi_admin_data'
-SERVER_HISTORY_KEY = 'cezi_server_history'
 MAX_SERVER_HISTORY = 100  # 服务器端最多保留100条
 
+# 缓存客户端连接
+_kv_client = None
+
 def get_kv_client():
-    """动态获取KV客户端，每次调用时检查环境变量"""
+    """获取KV客户端，使用缓存连接"""
+    global _kv_client
+    if _kv_client is not None:
+        return _kv_client
+    
     kv_url = os.environ.get('KV_URL') or os.environ.get('REDIS_URL')
     if not kv_url:
+        _kv_client = None
         return None
     try:
         import redis
-        return redis.from_url(kv_url)
-    except:
+        _kv_client = redis.from_url(kv_url)
+        return _kv_client
+    except Exception as e:
+        print(f"Redis connection error: {e}")
+        _kv_client = None
         return None
 
 def load_data():
+    """加载全部数据（包含prompts、models和server_history）"""
     # 优先使用 Vercel KV
     client = get_kv_client()
     if client:
@@ -489,8 +500,9 @@ def load_data():
             data = client.get(DATA_KEY)
             if data:
                 return json.loads(data)
-        except:
-            pass
+        except Exception as e:
+            print(f"Load data error: {e}")
+    
     # 回退到本地文件
     if os.path.exists(DATA_FILE):
         try:
@@ -498,57 +510,44 @@ def load_data():
                 return json.load(f)
         except:
             pass
+    
     return {"prompts": [], "models": [], "server_history": []}
 
 def save_data(data):
+    """保存全部数据（包含prompts、models和server_history）"""
     json_str = json.dumps(data, ensure_ascii=False)
+    
     # 优先使用 Vercel KV
     client = get_kv_client()
     if client:
         try:
             client.set(DATA_KEY, json_str)
             return
-        except:
-            pass
+        except Exception as e:
+            print(f"Save data error: {e}")
+    
     # 回退到本地文件
     with open(DATA_FILE, 'w') as f:
         f.write(json_str)
 
+def add_server_history(item):
+    """添加服务器端历史记录（与prompts/models保存在同一Redis key中）"""
+    data = load_data()
+    if 'server_history' not in data:
+        data['server_history'] = []
+    
+    data['server_history'].append(item)
+    
+    # 只保留最近100条
+    if len(data['server_history']) > MAX_SERVER_HISTORY:
+        data['server_history'] = data['server_history'][-MAX_SERVER_HISTORY:]
+    
+    save_data(data)
+
 def load_server_history():
     """加载服务器端历史记录"""
-    client = get_kv_client()
-    if client:
-        try:
-            data = client.get(SERVER_HISTORY_KEY)
-            if data:
-                return json.loads(data)
-        except:
-            pass
-    return []
-
-def save_server_history(history):
-    """保存服务器端历史记录（最多100条）"""
-    # 只保留最近100条
-    history = history[-MAX_SERVER_HISTORY:]
-    json_str = json.dumps(history, ensure_ascii=False)
-    client = get_kv_client()
-    if client:
-        try:
-            client.set(SERVER_HISTORY_KEY, json_str)
-        except:
-            pass
-
-def add_server_history(item):
-    """添加服务器端历史记录"""
-    try:
-        history = load_server_history()
-        history.append(item)
-        # 只保留最近100条
-        if len(history) > MAX_SERVER_HISTORY:
-            history = history[-MAX_SERVER_HISTORY:]
-        save_server_history(history)
-    except Exception as e:
-        print(f"Error adding server history: {e}")
+    data = load_data()
+    return data.get('server_history', [])
 
 def init_admin_data():
     data = load_data()
