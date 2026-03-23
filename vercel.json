@@ -5,7 +5,8 @@
       "src": "api/cezi.py",
       "use": "@vercel/python",
       "config": {
-        "maxLambdaSize": "15mb"
+        "maxLambdaSize": "15mb",
+        "timeout": 60
       }
     },
     {
@@ -30,10 +31,5 @@
       "src": "/",
       "dest": "/templates/index.html"
     }
-  ],
-  "functions": {
-    "api/cezi.py": {
-      "timeout": 60
-    }
-  }
+  ]
 }
