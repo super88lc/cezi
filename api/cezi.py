@@ -253,6 +253,9 @@ def cezi():
         "brief": f"{char}字，{result['analysis']['jixiong']}"
     })
     
+    # 格式化输出
+    verbose_text = format_verbose(result)
+    
     # 保存服务器端历史（Redis，最多100条）
     direction = data.get("direction", "南")
     time_info = result.get('meihua', {}).get('time', {}).get('shichen', '-')
@@ -273,9 +276,6 @@ def cezi():
         "display_result": display_result,
         "openid": openid[:8] + "***"  # 脱敏处理
     })
-    
-    # 格式化输出
-    verbose_text = format_verbose(result)
     
     return jsonify({
         "success": True,
