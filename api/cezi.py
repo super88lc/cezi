@@ -255,13 +255,22 @@ def cezi():
     
     # 保存服务器端历史（Redis，最多100条）
     direction = data.get("direction", "南")
+    time_info = result.get('meihua', {}).get('time', {}).get('shichen', '-')
+    model_name = 'MiniMax-M2.5'  # 当前使用的模型
+    
+    # 获取完整的verbose结果作为展示
+    display_result = verbose_text[:500] if verbose_text else result.get('conclusion', '')
+    
     add_server_history({
         "id": int(time.time() * 1000),
         "char": char,
         "question": question,
         "direction": direction,
         "time": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "time_info": time_info,
+        "model_name": model_name,
         "result": result['analysis']['jixiong'],
+        "display_result": display_result,
         "openid": openid[:8] + "***"  # 脱敏处理
     })
     
