@@ -859,7 +859,7 @@
             document.getElementById('resultDirection').textContent = dir + ' - ' + (dirDesc[dir] || '');
             
             // 生成针对性分析
-            const targeted = question ? generateTargetedAnalysis(question, data.result) : '';
+            const targeted = question ? generateTargetedAnalysis(question, data) : '';
             document.getElementById('resultTargeted').textContent = targeted;
             document.getElementById('resultCareer').textContent = data.result.career;
             document.getElementById('resultWealth').textContent = data.result.wealth;
