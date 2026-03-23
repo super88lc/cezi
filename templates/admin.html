@@ -262,14 +262,15 @@
                 body: JSON.stringify({id: id ? parseInt(id) : null, name, template})
             });
             
-            if (res.ok) {
+            const result = await res.json();
+            if (result.success) {
                 alert('保存成功！');
                 document.getElementById('promptName').value = '';
                 document.getElementById('promptName').dataset.id = '';
                 document.getElementById('promptTemplate').value = '';
                 loadPrompts();
             } else {
-                alert('保存失败: ' + res.status);
+                alert('保存失败: ' + (result.error || '未知错误'));
             }
         } catch(e) {
             alert('保存出错: ' + e);
