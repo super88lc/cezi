@@ -8,7 +8,7 @@
 MINIMAX_API_KEY = "sk-cp-Tmj3A5rpV32ER1gQvhW4jaC5rQ66nFglQfabG8CtLITQpPSjsmj50Ct6jh6i_G9fGugGyAYV744LhdVJ9irPGmgRgOrIGa6y--HBGAhWyGGVJTSmrpiPTro"
 
 def get_minimax_deep_analysis(char, question, direction, time_info, analysis_data, meihua_data=None):
-    """调用MiniMax进行深度个性化分析"""
+    """调用MiniMax进行深度个性化分析，返回(结果, prompt, 原始响应)"""
     
     # 根据问题类型提供更具体的分析方向
     question_type = ""
@@ -87,16 +87,17 @@ def get_minimax_deep_analysis(char, question, direction, time_info, analysis_dat
             timeout=45
         )
         
+        raw_response = response.text  # 保存原始响应
         if response.status_code == 200:
             result = response.json()
             if 'content' in result:
                 for item in result['content']:
                     if item.get('type') == 'text':
-                        return item.get('text', '')
-        return None
+                        return item.get('text', ''), prompt, raw_response
+        return None, prompt, raw_response
     except Exception as e:
         print(f"MiniMax API error: {e}")
-        return None
+        return None, prompt, str(e)
 
 
 from flask import Flask, request, jsonify, render_template
@@ -229,8 +230,10 @@ def cezi():
     result = generate_enhanced_result(char, question, data.get("direction", "南"))
     
     # 调用MiniMax进行深度分析（传入完整数据）
+    llm_prompt = ""
+    llm_response = ""
     try:
-        deep_analysis = get_minimax_deep_analysis(
+        deep_analysis, llm_prompt, llm_response = get_minimax_deep_analysis(
             char, 
             question, 
             result.get('meihua', {}).get('direction', '南'),
@@ -273,6 +276,8 @@ def cezi():
         "time_info": time_info,
         "model_name": model_name,
         "result": result['analysis']['jixiong'],
+        "prompt": llm_prompt,
+        "llm_response": llm_response,
         "display_result": display_result,
         "openid": openid[:8] + "***"  # 脱敏处理
     })
