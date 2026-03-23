@@ -453,33 +453,28 @@ import json
 import datetime
 from flask import jsonify
 
-# Vercel KV 配置
-USE_KV = os.environ.get('KV_URL') or os.environ.get('REDIS_URL')
-_kv_client = None
-
-def get_kv_client():
-    global _kv_client
-    if _kv_client is None:
-        try:
-            import redis
-            kv_url = os.environ.get('KV_URL') or os.environ.get('REDIS_URL')
-            _kv_client = redis.from_url(kv_url)
-        except:
-            _kv_client = False
-    return _kv_client
-
 DATA_FILE = '/tmp/admin_data.json'
 DATA_KEY = 'cezi_admin_data'
 
+def get_kv_client():
+    """动态获取KV客户端，每次调用时检查环境变量"""
+    kv_url = os.environ.get('KV_URL') or os.environ.get('REDIS_URL')
+    if not kv_url:
+        return None
+    try:
+        import redis
+        return redis.from_url(kv_url)
+    except:
+        return None
+
 def load_data():
     # 优先使用 Vercel KV
-    if USE_KV:
+    client = get_kv_client()
+    if client:
         try:
-            client = get_kv_client()
-            if client:
-                data = client.get(DATA_KEY)
-                if data:
-                    return json.loads(data)
+            data = client.get(DATA_KEY)
+            if data:
+                return json.loads(data)
         except:
             pass
     # 回退到本地文件
@@ -494,12 +489,11 @@ def load_data():
 def save_data(data):
     json_str = json.dumps(data, ensure_ascii=False)
     # 优先使用 Vercel KV
-    if USE_KV:
+    client = get_kv_client()
+    if client:
         try:
-            client = get_kv_client()
-            if client:
-                client.set(DATA_KEY, json_str)
-                return
+            client.set(DATA_KEY, json_str)
+            return
         except:
             pass
     # 回退到本地文件
