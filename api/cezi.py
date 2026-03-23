@@ -571,6 +571,20 @@ def set_active_prompt():
     save_data(data)
     return jsonify({'success': True})
 
+@app.route('/api/admin/prompt/preview', methods=['POST'])
+def preview_prompt():
+    """预览Prompt模板替换变量后的效果"""
+    req = request.json
+    template = req.get('template', '')
+    variables = req.get('variables', {})
+    
+    # 替换变量
+    result = template
+    for key, value in variables.items():
+        result = result.replace('{' + key + '}', value)
+    
+    return jsonify({'preview': result})
+
 @app.route('/api/admin/history/list', methods=['GET'])
 def list_history():
     page = request.args.get('page', 1, type=int)
@@ -644,6 +658,23 @@ def set_active_model():
     data = load_data()
     for m in data['models']:
         m['is_active'] = 1 if m['id'] == req['id'] else 0
+    save_data(data)
+    return jsonify({'success': True})
+
+@app.route('/api/admin/models/delete', methods=['POST'])
+def delete_model():
+    req = request.json
+    model_id = req.get('id')
+    if not model_id:
+        return jsonify({'success': False, 'error': 'Missing id'}), 400
+    
+    data = load_data()
+    original_count = len(data['models'])
+    data['models'] = [m for m in data['models'] if m['id'] != model_id]
+    
+    if len(data['models']) == original_count:
+        return jsonify({'success': False, 'error': 'Model not found'}), 404
+    
     save_data(data)
     return jsonify({'success': True})
 

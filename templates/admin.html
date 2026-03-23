@@ -284,12 +284,17 @@
     }
     
     async function activatePrompt(id) {
-        await fetch('/api/admin/prompt/set_active', {
+        const res = await fetch('/api/admin/prompt/set_active', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({id})
         });
-        loadPrompts();
+        const result = await res.json();
+        if (result.success) {
+            loadPrompts();
+        } else {
+            alert('启用失败: ' + (result.error || '未知错误'));
+        }
     }
     
     async function previewPrompt() {
@@ -306,7 +311,8 @@
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({template, variables})
         });
-        const data = await res.json();
+        const result = await res.json();
+        alert(result.preview || '预览失败');
         document.getElementById('previewCard').style.display = 'block';
         document.getElementById('previewContent').textContent = data.preview;
     }
@@ -410,22 +416,32 @@
     }
     
     async function activateModel(id) {
-        await fetch('/api/admin/models/set_active', {
+        const res = await fetch('/api/admin/models/set_active', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({id})
         });
-        loadModels();
+        const result = await res.json();
+        if (result.success) {
+            loadModels();
+        } else {
+            alert('启用失败: ' + (result.error || '未知错误'));
+        }
     }
     
     async function deleteModel(id) {
         if (confirm('确定删除?')) {
-            await fetch('/api/admin/models/delete', {
+            const res = await fetch('/api/admin/models/delete', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({id})
             });
-            loadModels();
+            const result = await res.json();
+            if (result.success) {
+                loadModels();
+            } else {
+                alert('删除失败: ' + (result.error || '未知错误'));
+            }
         }
     }
     
