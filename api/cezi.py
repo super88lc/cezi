@@ -447,15 +447,42 @@ if __name__ == "__main__":
 # The app is already defined above as `app`
 
 
-# ========== Admin API (JSON文件存储) ==========
+# ========== Admin API (支持Vercel KV/Redis或本地文件) ==========
 import os
 import json
 import datetime
 from flask import jsonify
 
+# Vercel KV 配置
+USE_KV = os.environ.get('KV_URL') or os.environ.get('REDIS_URL')
+_kv_client = None
+
+def get_kv_client():
+    global _kv_client
+    if _kv_client is None:
+        try:
+            import redis
+            kv_url = os.environ.get('KV_URL') or os.environ.get('REDIS_URL')
+            _kv_client = redis.from_url(kv_url)
+        except:
+            _kv_client = False
+    return _kv_client
+
 DATA_FILE = '/tmp/admin_data.json'
+DATA_KEY = 'cezi_admin_data'
 
 def load_data():
+    # 优先使用 Vercel KV
+    if USE_KV:
+        try:
+            client = get_kv_client()
+            if client:
+                data = client.get(DATA_KEY)
+                if data:
+                    return json.loads(data)
+        except:
+            pass
+    # 回退到本地文件
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, 'r') as f:
@@ -465,8 +492,19 @@ def load_data():
     return {"prompts": [], "models": [], "history": []}
 
 def save_data(data):
+    json_str = json.dumps(data, ensure_ascii=False)
+    # 优先使用 Vercel KV
+    if USE_KV:
+        try:
+            client = get_kv_client()
+            if client:
+                client.set(DATA_KEY, json_str)
+                return
+        except:
+            pass
+    # 回退到本地文件
     with open(DATA_FILE, 'w') as f:
-        json.dump(data, f, ensure_ascii=False)
+        f.write(json_str)
 
 def init_admin_data():
     data = load_data()
