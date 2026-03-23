@@ -254,6 +254,7 @@ def cezi():
     })
     
     # 保存服务器端历史（Redis，最多100条）
+    direction = data.get("direction", "南")
     add_server_history({
         "id": int(time.time() * 1000),
         "char": char,
@@ -539,12 +540,15 @@ def save_server_history(history):
 
 def add_server_history(item):
     """添加服务器端历史记录"""
-    history = load_server_history()
-    history.append(item)
-    # 只保留最近100条
-    if len(history) > MAX_SERVER_HISTORY:
-        history = history[-MAX_SERVER_HISTORY:]
-    save_server_history(history)
+    try:
+        history = load_server_history()
+        history.append(item)
+        # 只保留最近100条
+        if len(history) > MAX_SERVER_HISTORY:
+            history = history[-MAX_SERVER_HISTORY:]
+        save_server_history(history)
+    except Exception as e:
+        print(f"Error adding server history: {e}")
 
 def init_admin_data():
     data = load_data()
