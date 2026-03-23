@@ -2,18 +2,38 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/index.py",
-      "use": "@vercel/python"
+      "src": "api/cezi.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb"
+      }
+    },
+    {
+      "src": "templates/index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "templates/admin.html",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/index.py"
+      "dest": "/api/cezi.py"
+    },
+    {
+      "src": "/admin",
+      "dest": "/templates/admin.html"
     },
     {
       "src": "/",
-      "dest": "/api/index.py"
+      "dest": "/templates/index.html"
     }
-  ]
+  ],
+  "functions": {
+    "api/cezi.py": {
+      "timeout": 60
+    }
+  }
 }

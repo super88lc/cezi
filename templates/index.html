@@ -751,6 +751,9 @@
             }
             
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 55000); // 55秒超时
+                
                 const response = await fetch(API_BASE + '/api/cezi', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -758,8 +761,10 @@
                         char: char,
                         question: question,
                         openid: 'guest_' + Date.now()
-                    })
+                    }),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
                 
                 const data = await response.json();
                 
