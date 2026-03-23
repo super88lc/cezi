@@ -773,10 +773,14 @@
                     alert(data.message || '测算失败');
                 }
             } catch (e) {
-                // 隐藏思考弹窗，显示错误
+                // 隐藏思考弹窗，显示更详细的错误信息
                 const thinkingModal = document.getElementById('thinkingModal');
                 if (thinkingModal) thinkingModal.style.display = 'none';
-                alert('网络错误，请检查网络后重试');
+                
+                // 显示详细错误信息帮助调试
+                const errorMsg = '网络错误: ' + (e.message || '未知错误');
+                console.error('API Error:', e);
+                alert(errorMsg);
             }
         }
         
@@ -793,19 +797,39 @@
             document.getElementById('resultJixiong').textContent = data.analysis.jixiong;
             
             // 针对性分析
-            const targeted = generateTargetedAnalysis(question, data);
-            
-            document.getElementById('resultBrief').textContent = data.result.brief;
-            
-            // 深度分析作为主要内容显示
-            const deepSection = document.getElementById('deepAnalysisSection');
+            // 格式化总体分析 - 老师傅语气，纯段落格式
+            const resultBrief = document.getElementById('resultBrief');
             if (data.deep_analysis) {
-                document.getElementById('deepAnalysisText').innerHTML = data.deep_analysis.replace(/\n/g, '<br><br>');
+                let content = data.deep_analysis;
+                
+                // 全部替换：移除所有标题格式
+                content = content
+                    .replace(/^#+\s*/gm, '')           // 移除 # 标题
+                    .replace(/^[一二三四五六七八九十]+[、.]\s*/g, '')  // 移除 一、二、三、 和后面的文字
+                    .replace(/^\d+[、.]\s*/gm, '')    // 移除 1. 2. 等编号
+                    .replace(/\*\*(.*?)\*\*/g, '$1')  // 移除粗体
+                    .replace(/\*(.*?)\*/g, '$1')      // 移除斜体
+                    .replace(/^>\s*/gm, '')           // 移除引用
+                    .replace(/^[-*+]\s*/gm, '')       // 移除列表项
+                    .replace(/^---\s*/gm, '')         // 移除分隔线
+                    .replace(/具体建议：/g, '\n\n具体建议：')  // 保留"具体建议"但分段
+                    .replace(/\n{2,}/g, '\n\n')       // 压缩多个空行
+                    .trim();
+                
+                // 按段落分割
+                const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim());
+                let html = '';
+                
+                paragraphs.forEach(para => {
+                    para = para.replace(/\n/g, ' ').trim();
+                    if (para) {
+                        html += `<p style="margin:0 0 12px 0;line-height:1.6;font-size:14px;">${para}</p>`;
+                    }
+                });
+                
+                resultBrief.innerHTML = html;
             } else {
-                // 如果没有深度分析，用简明内容
-                document.getElementById('deepAnalysisText').innerHTML = 
-                    (data.result?.brief || '') + '<br><br>' + 
-                    (data.result?.suggestion || '');
+                resultBrief.innerHTML = `<p style="margin:0 0 12px 0;line-height:1.6;font-size:14px;">${data.result?.brief || ''}</p><p style="margin:0 0 12px 0;line-height:1.6;font-size:14px;">${data.result?.suggestion || ''}</p>`;
             }
             
             // 字形拆解
@@ -834,6 +858,8 @@
             };
             document.getElementById('resultDirection').textContent = dir + ' - ' + (dirDesc[dir] || '');
             
+            // 生成针对性分析
+            const targeted = question ? generateTargetedAnalysis(question, data.result) : '';
             document.getElementById('resultTargeted').textContent = targeted;
             document.getElementById('resultCareer').textContent = data.result.career;
             document.getElementById('resultWealth').textContent = data.result.wealth;
@@ -1025,12 +1051,9 @@
             document.getElementById('resultDirection').textContent = item.direction ? item.direction + ' - ' + (dirDesc[item.direction] || '') : '';
             
             // 深度分析
-            const deepSection = document.getElementById('deepSection');
-            if (item.deep_analysis && deepSection) {
-                document.getElementById('deepAnalysisText').innerHTML = item.deep_analysis.replace(/\n/g, '<br>');
-                deepSection.style.display = 'block';
-            } else if (deepSection) {
-                deepSection.style.display = 'none';
+            const resultBrief = document.getElementById('resultBrief');
+            if (item.deep_analysis && resultBrief) {
+                resultBrief.innerHTML = item.deep_analysis.replace(/\n/g, '<br>');
             }
         }
         
