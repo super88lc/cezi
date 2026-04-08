@@ -2,10 +2,27 @@
 """
 测字算事小程序 - 完整版后端
 整合测字算法 + OCR + 微信支付
+支持 MiniMax / 千帆(Qianfan) / OpenAI 等多模型
 """
 
+import os
+from dotenv import load_dotenv
 
-MINIMAX_API_KEY = "sk-cp-Tmj3A5rpV32ER1gQvhW4jaC5rQ66nFglQfabG8CtLITQpPSjsmj50Ct6jh6i_G9fGugGyAYV744LhdVJ9irPGmgRgOrIGa6y--HBGAhWyGGVJTSmrpiPTro"
+# 加载环境变量
+load_dotenv()
+
+# API Keys 从环境变量读取
+MINIMAX_API_KEY = os.getenv('MINIMAX_API_KEY', '')
+QIANFAN_ACCESS_KEY = os.getenv('QIANFAN_ACCESS_KEY', '')
+QIANFAN_SECRET_KEY = os.getenv('QIANFAN_SECRET_KEY', '')
+
+# 导入千帆客户端
+try:
+    from qianfan_client import QianfanClient, get_qianfan_deep_analysis
+    QIANFAN_AVAILABLE = True
+except ImportError:
+    QIANFAN_AVAILABLE = False
+    print("⚠️ 千帆客户端不可用")
 
 def get_minimax_deep_analysis(char, question, direction, time_info, analysis_data, meihua_data=None):
     """调用MiniMax进行深度个性化分析，返回(结果, prompt, 原始响应)"""
@@ -239,22 +256,92 @@ def cezi():
     # 生成结果 - 使用V3增强版
     result = generate_enhanced_result(char, question, data.get("direction", "南"))
     
-    # 调用MiniMax进行深度分析（传入完整数据）
+    # 调用AI模型进行深度分析（根据配置选择 MiniMax 或 千帆）
     llm_prompt = ""
     llm_response = ""
+    model_used = "minimax"  # 默认模型
+    
     try:
-        deep_analysis, llm_prompt, llm_response = get_minimax_deep_analysis(
-            char, 
-            question, 
-            result.get('meihua', {}).get('direction', '南'),
-            result.get('meihua', {}).get('time', {}),
-            result.get('analysis', {}),
-            result.get('meihua', {})
-        )
+        # 获取当前激活的模型配置
+        from data_manager import load_data
+        admin_data = load_data()
+        models = admin_data.get('models', [])
+        active_model = None
+        for m in models:
+            if m.get('is_active'):
+                active_model = m
+                break
+        
+        # 如果没有配置，使用默认
+        if not active_model and models:
+            active_model = models[0]
+        
+        # 根据模型类型调用不同的API
+        if active_model:
+            provider = active_model.get('provider', 'minimax')
+            model_used = provider
+            
+            if provider == 'qianfan' and QIANFAN_AVAILABLE:
+                # 使用千帆模型 - 优先使用模型配置中的密钥，否则使用环境变量
+                access_key = active_model.get('access_key') or QIANFAN_ACCESS_KEY
+                secret_key = active_model.get('secret_key') or QIANFAN_SECRET_KEY
+                
+                if access_key and secret_key:
+                    # 创建临时客户端使用模型配置的密钥
+                    from qianfan_client import QianfanClient
+                    client = QianfanClient(access_key=access_key, secret_key=secret_key)
+                    
+                    # 获取模型名称
+                    model_name = active_model.get('model_name', 'ERNIE-4.0-8K')
+                    if model_name:
+                        client.model_name = model_name
+                    
+                    deep_analysis, llm_prompt, llm_response = get_qianfan_deep_analysis(
+                        char, 
+                        question, 
+                        result.get('meihua', {}).get('direction', '南'),
+                        result.get('meihua', {}).get('time', {}),
+                        result.get('analysis', {}),
+                        result.get('meihua', {}),
+                        client=client  # 传入自定义客户端
+                    )
+            elif provider == 'minimax' and MINIMAX_API_KEY:
+                # 使用 MiniMax 模型
+                deep_analysis, llm_prompt, llm_response = get_minimax_deep_analysis(
+                    char, 
+                    question, 
+                    result.get('meihua', {}).get('direction', '南'),
+                    result.get('meihua', {}).get('time', {}),
+                    result.get('analysis', {}),
+                    result.get('meihua', {})
+                )
+            else:
+                # 默认使用 MiniMax
+                deep_analysis, llm_prompt, llm_response = get_minimax_deep_analysis(
+                    char, 
+                    question, 
+                    result.get('meihua', {}).get('direction', '南'),
+                    result.get('meihua', {}).get('time', {}),
+                    result.get('analysis', {}),
+                    result.get('meihua', {})
+                )
+        else:
+            # 默认使用 MiniMax
+            deep_analysis, llm_prompt, llm_response = get_minimax_deep_analysis(
+                char, 
+                question, 
+                result.get('meihua', {}).get('direction', '南'),
+                result.get('meihua', {}).get('time', {}),
+                result.get('analysis', {}),
+                result.get('meihua', {})
+            )
+        
         if deep_analysis:
             result['deep_analysis'] = deep_analysis
+            result['model_used'] = model_used
     except Exception as e:
         print(f"Deep analysis error: {e}")
+        result['model_used'] = model_used
     
     increment_count(openid)
     
@@ -585,11 +672,20 @@ def init_admin_data():
             "updated_at": datetime.datetime.now().isoformat()
         }]
     if not data.get('models'):
-        data['models'] = [{
-            "id": 1, "name": "MiniMax", "provider": "minimax", "api_key": "", 
-            "endpoint": "https://api.minimaxi.com/anthropic/v1", "model_name": "MiniMax-M2.5",
-            "is_active": 1, "created_at": datetime.datetime.now().isoformat()
-        }]
+        now = datetime.datetime.now().isoformat()
+        data['models'] = [
+            {
+                "id": 1, "name": "MiniMax", "provider": "minimax", "api_key": "", 
+                "endpoint": "https://api.minimaxi.com/anthropic/v1", "model_name": "MiniMax-M2.5",
+                "is_active": 0, "created_at": now, "updated_at": now
+            },
+            {
+                "id": 2, "name": "千帆ERNIE-4.0", "provider": "qianfan",
+                "access_key": "", "secret_key": "",
+                "endpoint": "https://qianfan.baidubce.com/v2", "model_name": "ERNIE-4.0-8K",
+                "is_active": 1, "created_at": now, "updated_at": now
+            }
+        ]
     save_data(data)
 
 init_admin_data()
@@ -747,9 +843,18 @@ def list_models():
     result = []
     for m in models:
         model_copy = dict(m)
+        # 处理标准 API Key
         if model_copy.get('api_key'):
             key = model_copy['api_key']
             model_copy['api_key'] = '*' * 8 + key[-4:] if len(key) > 4 else '*' * len(key)
+        # 处理千帆 Access Key
+        if model_copy.get('access_key'):
+            key = model_copy['access_key']
+            model_copy['access_key'] = '*' * 8 + key[-4:] if len(key) > 4 else '*' * len(key)
+        # 处理千帆 Secret Key
+        if model_copy.get('secret_key'):
+            key = model_copy['secret_key']
+            model_copy['secret_key'] = '*' * 8 + key[-4:] if len(key) > 4 else '*' * len(key)
         result.append(model_copy)
     return jsonify(result)
 
@@ -772,6 +877,7 @@ def save_model():
         data = load_data()
         now = datetime.datetime.now().isoformat()
         new_name = req['name'].strip()
+        provider = req.get('provider')
         
         # 检查名称重复
         current_id = req.get('id')
@@ -783,28 +889,48 @@ def save_model():
             for m in data['models']:
                 if m['id'] == req['id']:
                     m['name'] = new_name
-                    m['provider'] = req.get('provider')
+                    m['provider'] = provider
                     m['endpoint'] = req.get('endpoint', '')
                     m['model_name'] = req.get('model_name', '')
-                    # Only update api_key if provided and not masked
-                    new_key = req.get('api_key', '')
-                    if new_key and not new_key.startswith('*'):
-                        m['api_key'] = new_key
+                    
+                    # 根据提供商处理不同的密钥字段
+                    if provider == 'qianfan':
+                        # 千帆：Access Key + Secret Key
+                        new_access = req.get('access_key', '')
+                        if new_access and not new_access.startswith('*'):
+                            m['access_key'] = new_access
+                        new_secret = req.get('secret_key', '')
+                        if new_secret and not new_secret.startswith('*'):
+                            m['secret_key'] = new_secret
+                    else:
+                        # 其他：单一 API Key
+                        new_key = req.get('api_key', '')
+                        if new_key and not new_key.startswith('*'):
+                            m['api_key'] = new_key
+                    
                     m['updated_at'] = now
                     break
         else:
             new_id = max([m['id'] for m in data['models']], default=0) + 1
-            data['models'].append({
+            model_data = {
                 "id": new_id,
                 "name": new_name,
-                "provider": req['provider'],
+                "provider": provider,
                 "endpoint": req.get('endpoint', ''),
                 "model_name": req.get('model_name', ''),
-                "api_key": req.get('api_key', ''),
                 "is_active": 0,
                 "created_at": now,
                 "updated_at": now
-            })
+            }
+            
+            # 根据提供商设置密钥
+            if provider == 'qianfan':
+                model_data['access_key'] = req.get('access_key', '')
+                model_data['secret_key'] = req.get('secret_key', '')
+            else:
+                model_data['api_key'] = req.get('api_key', '')
+            
+            data['models'].append(model_data)
         
         save_data(data)
         return jsonify({'success': True})

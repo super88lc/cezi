@@ -207,12 +207,29 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label required">提供商</label>
-                        <select class="form-select" id="modelProvider">
+                        <select class="form-select" id="modelProvider" onchange="onProviderChange()">
                             <option value="minimax">MiniMax</option>
+                            <option value="qianfan">千帆(Qianfan/百度)</option>
                             <option value="openai">OpenAI</option>
                             <option value="anthropic">Anthropic</option>
                             <option value="custom">自定义</option>
                         </select>
+                    </div>
+                    <!-- MiniMax/OpenAI 等标准 API Key 模式 -->
+                    <div class="form-group" id="standardApiKeyGroup">
+                        <label class="form-label">API Key</label>
+                        <input type="password" class="form-input" id="modelApiKey" placeholder="API密钥（编辑时留空表示不修改）">
+                    </div>
+                    <!-- 千帆专用：Access Key -->
+                    <div class="form-group" id="qianfanAccessKeyGroup" style="display:none;">
+                        <label class="form-label required">Access Key</label>
+                        <input type="password" class="form-input" id="qianfanAccessKey" placeholder="格式：bce-v3/ALTAK-xxxxx/xxxxx">
+                        <div style="font-size:12px;color:#888;margin-top:5px;">从百度智能云控制台获取</div>
+                    </div>
+                    <!-- 千帆专用：Secret Key -->
+                    <div class="form-group" id="qianfanSecretKeyGroup" style="display:none;">
+                        <label class="form-label required">Secret Key</label>
+                        <input type="password" class="form-input" id="qianfanSecretKey" placeholder="从百度智能云控制台获取">
                     </div>
                     <div class="form-group">
                         <label class="form-label">API端点</label>
@@ -220,11 +237,21 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">模型名称</label>
-                        <input type="text" class="form-input" id="modelModelName" placeholder="例如：MiniMax-M2.5">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">API Key</label>
-                        <input type="password" class="form-input" id="modelApiKey" placeholder="API密钥（编辑时留空表示不修改）">
+                        <select class="form-select" id="modelModelNameSelect" style="margin-bottom:8px;">
+                            <option value="">-- 选择预设模型 --</option>
+                            <option value="MiniMax-M2.5">MiniMax-M2.5</option>
+                            <option value="ERNIE-4.0-8K">ERNIE-4.0-8K</option>
+                            <option value="ERNIE-4.0-Turbo-8K">ERNIE-4.0-Turbo-8K</option>
+                            <option value="ERNIE-3.5-8K">ERNIE-3.5-8K</option>
+                            <option value="ERNIE-Speed-8K">ERNIE-Speed-8K</option>
+                            <option value="ERNIE-Lite-8K">ERNIE-Lite-8K</option>
+                            <option value="gpt-4">GPT-4</option>
+                            <option value="gpt-3.5-turbo">GPT-3.5-Turbo</option>
+                            <option value="claude-3-opus">Claude-3-Opus</option>
+                            <option value="claude-3-sonnet">Claude-3-Sonnet</option>
+                            <option value="custom">自定义</option>
+                        </select>
+                        <input type="text" class="form-input" id="modelModelName" placeholder="或输入自定义模型名称">
                     </div>
                     <div style="display: flex; gap: 10px;">
                         <button class="btn btn-primary" id="saveModelBtn" onclick="saveModel()">
@@ -680,18 +707,94 @@
         }
     }
     
+    function onProviderChange() {
+        const provider = document.getElementById('modelProvider').value;
+        const standardGroup = document.getElementById('standardApiKeyGroup');
+        const accessGroup = document.getElementById('qianfanAccessKeyGroup');
+        const secretGroup = document.getElementById('qianfanSecretKeyGroup');
+        const modelSelect = document.getElementById('modelModelNameSelect');
+        const modelInput = document.getElementById('modelModelName');
+        const endpointInput = document.getElementById('modelEndpoint');
+        
+        if (provider === 'qianfan') {
+            // 千帆模式：显示 Access Key 和 Secret Key
+            standardGroup.style.display = 'none';
+            accessGroup.style.display = 'block';
+            secretGroup.style.display = 'block';
+            // 千帆端点固定
+            endpointInput.value = 'https://qianfan.baidubce.com/v2';
+            endpointInput.readOnly = true;
+        } else {
+            // 标准模式：显示单一 API Key
+            standardGroup.style.display = 'block';
+            accessGroup.style.display = 'none';
+            secretGroup.style.display = 'none';
+            endpointInput.readOnly = false;
+        }
+        
+        // 根据提供商预设模型列表
+        updateModelOptions(provider);
+    }
+    
+    function updateModelOptions(provider) {
+        const select = document.getElementById('modelModelNameSelect');
+        const input = document.getElementById('modelModelName');
+        const options = {
+            'minimax': ['MiniMax-M2.5'],
+            'qianfan': ['ERNIE-4.0-8K', 'ERNIE-4.0-Turbo-8K', 'ERNIE-3.5-8K', 'ERNIE-Speed-8K', 'ERNIE-Lite-8K'],
+            'openai': ['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+            'anthropic': ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku'],
+            'custom': []
+        };
+        
+        const opts = options[provider] || [];
+        let html = '<option value="">-- 选择预设模型 --</option>';
+        opts.forEach(m => {
+            html += `<option value="${m}">${m}</option>`;
+        });
+        html += '<option value="custom">自定义</option>';
+        select.innerHTML = html;
+        
+        // 监听选择变化
+        select.onchange = function() {
+            if (this.value === 'custom') {
+                input.style.display = 'block';
+                input.placeholder = '输入自定义模型名称';
+            } else if (this.value) {
+                input.value = this.value;
+                input.style.display = 'none';
+            } else {
+                input.style.display = 'block';
+            }
+        };
+        
+        // 默认显示输入框
+        input.style.display = 'block';
+    }
+    
     function validateModelForm() {
         const name = document.getElementById('modelName').value.trim();
         const provider = document.getElementById('modelProvider').value;
         
         document.getElementById('modelName').classList.toggle('error', !name);
         
+        // 千帆需要额外验证
+        if (provider === 'qianfan') {
+            const id = document.getElementById('modelId').value;
+            const accessKey = document.getElementById('qianfanAccessKey').value.trim();
+            const secretKey = document.getElementById('qianfanSecretKey').value.trim();
+            // 新增时必须填写
+            if (!id && (!accessKey || !secretKey)) {
+                showToast('千帆模型需要填写 Access Key 和 Secret Key', 'error');
+                return false;
+            }
+        }
+        
         return name && provider;
     }
     
     async function saveModel() {
         if (!validateModelForm()) {
-            showToast('请填写模型名称', 'error');
             return;
         }
         
@@ -702,13 +805,29 @@
         const provider = document.getElementById('modelProvider').value;
         const endpoint = document.getElementById('modelEndpoint').value.trim();
         const model_name = document.getElementById('modelModelName').value.trim();
-        const api_key = document.getElementById('modelApiKey').value;
+        
+        // 构建请求体
+        const body = {
+            id: id ? parseInt(id) : null,
+            name,
+            provider,
+            endpoint,
+            model_name
+        };
+        
+        // 根据提供商选择 API Key 字段
+        if (provider === 'qianfan') {
+            body.access_key = document.getElementById('qianfanAccessKey').value;
+            body.secret_key = document.getElementById('qianfanSecretKey').value;
+        } else {
+            body.api_key = document.getElementById('modelApiKey').value;
+        }
         
         try {
             const res = await fetch('/api/admin/models/save', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({id: id ? parseInt(id) : null, name, provider, endpoint, model_name, api_key})
+                body: JSON.stringify(body)
             });
             
             const result = await res.json();
@@ -741,9 +860,21 @@
             document.getElementById('modelProvider').value = m.provider;
             document.getElementById('modelEndpoint').value = m.endpoint || '';
             document.getElementById('modelModelName').value = m.model_name || '';
-            document.getElementById('modelApiKey').value = ''; // Don't show API key
             document.getElementById('modelFormTitle').textContent = '编辑模型';
-            document.getElementById('modelApiKey').placeholder = 'API密钥（留空表示不修改）';
+            
+            // 触发 provider 切换以更新界面
+            onProviderChange();
+            
+            // 千帆模型特殊处理
+            if (m.provider === 'qianfan') {
+                document.getElementById('qianfanAccessKey').value = ''; // 不显示完整 key
+                document.getElementById('qianfanSecretKey').value = ''; // 不显示完整 key
+                document.getElementById('qianfanAccessKey').placeholder = m.access_key ? '已配置（留空不修改）' : '格式：bce-v3/ALTAK-xxxxx/xxxxx';
+                document.getElementById('qianfanSecretKey').placeholder = m.secret_key ? '已配置（留空不修改）' : '从百度智能云控制台获取';
+            } else {
+                document.getElementById('modelApiKey').value = ''; // Don't show API key
+                document.getElementById('modelApiKey').placeholder = m.api_key ? '已配置（留空不修改）' : 'API密钥';
+            }
         } catch (e) {
             showToast('加载模型失败: ' + e.message, 'error');
         }
@@ -794,11 +925,20 @@
         document.getElementById('modelName').value = '';
         document.getElementById('modelProvider').value = 'minimax';
         document.getElementById('modelEndpoint').value = '';
+        document.getElementById('modelEndpoint').readOnly = false;
         document.getElementById('modelModelName').value = '';
+        document.getElementById('modelModelName').style.display = 'block';
         document.getElementById('modelApiKey').value = '';
-        document.getElementById('modelFormTitle').textContent = '添加模型';
         document.getElementById('modelApiKey').placeholder = 'API密钥';
+        document.getElementById('qianfanAccessKey').value = '';
+        document.getElementById('qianfanAccessKey').placeholder = '格式：bce-v3/ALTAK-xxxxx/xxxxx';
+        document.getElementById('qianfanSecretKey').value = '';
+        document.getElementById('qianfanSecretKey').placeholder = '从百度智能云控制台获取';
+        document.getElementById('modelFormTitle').textContent = '添加模型';
         document.getElementById('modelName').classList.remove('error');
+        
+        // 重置提供商相关显示
+        onProviderChange();
     }
     
     // 工具函数
