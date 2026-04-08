@@ -114,6 +114,16 @@ from cezi_core_v3 import generate_enhanced_result, format_verbose
 app = Flask(__name__, template_folder='templates')
 CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]}}, supports_credentials=True)
 
+# ========== Admin后台管理 ==========
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+try:
+    from admin_routes import admin_bp
+    app.register_blueprint(admin_bp)
+    print("✅ Admin routes registered")
+except ImportError as e:
+    print(f"⚠️ Admin routes not available: {e}")
+
 # ========== 配置 ==========
 # 百度OCR
 BAIDU_API_KEY = "yDxNzWrNG1maoB9Ky7nUjqdc"
@@ -634,6 +644,41 @@ def set_active_prompt():
     save_data(data)
     return jsonify({'success': True})
 
+@app.route('/api/admin/prompt/delete', methods=['POST'])
+def delete_prompt():
+    """删除Prompt配置"""
+    req = request.json
+    prompt_id = req.get('id')
+    if not prompt_id:
+        return jsonify({'success': False, 'error': 'Missing id'}), 400
+    
+    data = load_data()
+    original_count = len(data['prompts'])
+    
+    # Check if trying to delete the only active prompt
+    prompt_to_delete = None
+    for p in data['prompts']:
+        if p['id'] == prompt_id:
+            prompt_to_delete = p
+            break
+    
+    if prompt_to_delete and prompt_to_delete.get('is_active') == 1:
+        # Count other prompts
+        other_prompts = [p for p in data['prompts'] if p['id'] != prompt_id]
+        if len(other_prompts) == 0:
+            return jsonify({'success': False, 'error': '不能删除唯一的Prompt配置'}), 400
+        # Activate another prompt
+        if other_prompts:
+            other_prompts[0]['is_active'] = 1
+    
+    data['prompts'] = [p for p in data['prompts'] if p['id'] != prompt_id]
+    
+    if len(data['prompts']) == original_count:
+        return jsonify({'success': False, 'error': 'Prompt not found'}), 404
+    
+    save_data(data)
+    return jsonify({'success': True})
+
 @app.route('/api/admin/prompt/preview', methods=['POST'])
 def preview_prompt():
     """预览Prompt模板替换变量后的效果"""
@@ -669,9 +714,53 @@ def get_history(id):
             return jsonify(h)
     return jsonify({})
 
+@app.route('/api/admin/history/delete', methods=['POST'])
+def delete_history():
+    """删除历史记录"""
+    req = request.json
+    history_id = req.get('id')
+    if not history_id:
+        return jsonify({'success': False, 'error': 'Missing id'}), 400
+    
+    history = load_server_history()
+    original_count = len(history)
+    history = [h for h in history if h.get('id') != history_id]
+    
+    if len(history) == original_count:
+        return jsonify({'success': False, 'error': 'History not found'}), 404
+    
+    # Save back
+    try:
+        file_path = os.path.join(DATA_DIR, 'history.json')
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(history, f, ensure_ascii=False, indent=2)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/admin/models/list', methods=['GET'])
 def list_models():
-    return jsonify(load_data().get('models', []))
+    """获取模型列表（隐藏API Key）"""
+    data = load_data()
+    models = data.get('models', [])
+    # Hide API keys for security
+    result = []
+    for m in models:
+        model_copy = dict(m)
+        if model_copy.get('api_key'):
+            key = model_copy['api_key']
+            model_copy['api_key'] = '*' * 8 + key[-4:] if len(key) > 4 else '*' * len(key)
+        result.append(model_copy)
+    return jsonify(result)
+
+@app.route('/api/admin/models/<int:id>', methods=['GET'])
+def get_model(id):
+    """获取单个模型详情（用于编辑，返回完整API Key）"""
+    data = load_data()
+    for m in data['models']:
+        if m['id'] == id:
+            return jsonify(m)
+    return jsonify({'error': 'Model not found'}), 404
 
 @app.route('/api/admin/models/save', methods=['POST'])
 def save_model():
@@ -697,7 +786,10 @@ def save_model():
                     m['provider'] = req.get('provider')
                     m['endpoint'] = req.get('endpoint', '')
                     m['model_name'] = req.get('model_name', '')
-                    m['api_key'] = req.get('api_key', '')
+                    # Only update api_key if provided and not masked
+                    new_key = req.get('api_key', '')
+                    if new_key and not new_key.startswith('*'):
+                        m['api_key'] = new_key
                     m['updated_at'] = now
                     break
         else:
@@ -737,6 +829,23 @@ def delete_model():
     
     data = load_data()
     original_count = len(data['models'])
+    
+    # Find the model being deleted
+    model_to_delete = None
+    for m in data['models']:
+        if m['id'] == model_id:
+            model_to_delete = m
+            break
+    
+    # Prevent deleting the last active model
+    if model_to_delete and model_to_delete.get('is_active') == 1:
+        other_models = [m for m in data['models'] if m['id'] != model_id]
+        if len(other_models) == 0:
+            return jsonify({'success': False, 'error': '不能删除唯一的活跃模型'}), 400
+        # Activate another model
+        if other_models:
+            other_models[0]['is_active'] = 1
+    
     data['models'] = [m for m in data['models'] if m['id'] != model_id]
     
     if len(data['models']) == original_count:
