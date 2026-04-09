@@ -235,18 +235,31 @@ def admin_page():
 @app.route("/api/cezi", methods=["POST"])
 def cezi():
     """测字接口"""
-    data = request.json
+    print(f"[CEZI] ========== 测字请求开始 ==========")
+    
+    try:
+        data = request.json
+        print(f"[CEZI] 请求数据: {data}")
+    except Exception as e:
+        print(f"[CEZI] ❌ 解析请求JSON失败: {e}")
+        return jsonify({"error": "请求格式错误", "details": str(e)}), 400
+    
     char = data.get("char", "").strip()
     question = data.get("question", "")
     openid = data.get("openid", "anonymous")
     
+    print(f"[CEZI] 参数: char={char}, question={question}, openid={openid}")
+    
     if not char:
+        print(f"[CEZI] ❌ 未提供字符")
         return jsonify({"error": "请输入要测的字"}), 400
     
     char = char[0]  # 只测第一个字
+    print(f"[CEZI] 处理字符: {char}")
     
     # 检查次数
     if not check_limit(openid):
+        print(f"[CEZI] ⚠️ 用户 {openid} 次数已用完")
         return jsonify({
             "error": "今日免费次数已用完",
             "upgrade": True,
@@ -254,44 +267,65 @@ def cezi():
         }), 403
     
     # 生成结果 - 使用V3增强版
-    result = generate_enhanced_result(char, question, data.get("direction", "南"))
+    print(f"[CEZI] 调用 generate_enhanced_result...")
+    try:
+        result = generate_enhanced_result(char, question, data.get("direction", "南"))
+        print(f"[CEZI] ✅ generate_enhanced_result 成功")
+    except Exception as e:
+        print(f"[CEZI] ❌ generate_enhanced_result 失败: {e}")
+        import traceback
+        print(f"[CEZI] 错误堆栈: {traceback.format_exc()}")
+        return jsonify({"error": "生成结果失败", "details": str(e)}), 500
     
     # 调用AI模型进行深度分析（根据配置选择 MiniMax 或 千帆）
     llm_prompt = ""
     llm_response = ""
     model_used = "minimax"  # 默认模型
     
+    print(f"[CEZI] 开始深度分析，MINIMAX_API_KEY 是否存在: {bool(MINIMAX_API_KEY)}")
+    print(f"[CEZI] QIANFAN_AVAILABLE: {QIANFAN_AVAILABLE}")
+    
     try:
         # 获取当前激活的模型配置
-        # 使用本模块中已定义的 load_data 函数
+        print(f"[CEZI] 调用 load_data()...")
         admin_data = load_data()
         models = admin_data.get('models', [])
+        print(f"[CEZI] 加载到 {len(models)} 个模型配置")
+        
         active_model = None
         for m in models:
             if m.get('is_active'):
                 active_model = m
                 break
         
+        if active_model:
+            print(f"[CEZI] 使用活跃模型: {active_model.get('name')} ({active_model.get('provider')})")
+        else:
+            print(f"[CEZI] 没有找到活跃模型，使用默认 MiniMax")
+        
         # 如果没有配置，使用默认
         if not active_model and models:
             active_model = models[0]
+        
+        deep_analysis = None
         
         # 根据模型类型调用不同的API
         if active_model:
             provider = active_model.get('provider', 'minimax')
             model_used = provider
+            print(f"[CEZI] 使用 provider: {provider}")
             
             if provider == 'qianfan' and QIANFAN_AVAILABLE:
-                # 使用千帆模型 - 优先使用模型配置中的密钥，否则使用环境变量
+                # 使用千帆模型
                 access_key = active_model.get('access_key') or QIANFAN_ACCESS_KEY
                 secret_key = active_model.get('secret_key') or QIANFAN_SECRET_KEY
+                print(f"[CEZI] 千帆密钥是否存在: access={bool(access_key)}, secret={bool(secret_key)}")
                 
                 if access_key and secret_key:
-                    # 创建临时客户端使用模型配置的密钥
+                    print(f"[CEZI] 调用千帆 API...")
                     from qianfan_client import QianfanClient
                     client = QianfanClient(access_key=access_key, secret_key=secret_key)
                     
-                    # 获取模型名称
                     model_name = active_model.get('model_name', 'ERNIE-4.0-8K')
                     if model_name:
                         client.model_name = model_name
@@ -303,10 +337,11 @@ def cezi():
                         result.get('meihua', {}).get('time', {}),
                         result.get('analysis', {}),
                         result.get('meihua', {}),
-                        client=client  # 传入自定义客户端
+                        client=client
                     )
+                    print(f"[CEZI] 千帆 API 返回: {deep_analysis is not None}")
             elif provider == 'minimax' and MINIMAX_API_KEY:
-                # 使用 MiniMax 模型
+                print(f"[CEZI] 调用 MiniMax API...")
                 deep_analysis, llm_prompt, llm_response = get_minimax_deep_analysis(
                     char, 
                     question, 
@@ -315,8 +350,9 @@ def cezi():
                     result.get('analysis', {}),
                     result.get('meihua', {})
                 )
+                print(f"[CEZI] MiniMax API 返回: {deep_analysis is not None}")
             else:
-                # 默认使用 MiniMax
+                print(f"[CEZI] 使用默认 MiniMax (无配置)...")
                 deep_analysis, llm_prompt, llm_response = get_minimax_deep_analysis(
                     char, 
                     question, 
@@ -326,7 +362,7 @@ def cezi():
                     result.get('meihua', {})
                 )
         else:
-            # 默认使用 MiniMax
+            print(f"[CEZI] 使用默认 MiniMax (无活跃模型)...")
             deep_analysis, llm_prompt, llm_response = get_minimax_deep_analysis(
                 char, 
                 question, 
@@ -339,11 +375,15 @@ def cezi():
         if deep_analysis:
             result['deep_analysis'] = deep_analysis
             result['model_used'] = model_used
+            print(f"[CEZI] 深度分析已添加到结果")
     except Exception as e:
-        print(f"Deep analysis error: {e}")
+        print(f"[CEZI] ❌ 深度分析失败: {e}")
+        import traceback
+        print(f"[CEZI] 错误堆栈: {traceback.format_exc()}")
         result['model_used'] = model_used
     
     increment_count(openid)
+    print(f"[CEZI] 用户次数已增加")
     
     # 保存用户历史（内存中，完整保存）
     user = get_user(openid)
@@ -352,6 +392,7 @@ def cezi():
         "time": time.time(),
         "brief": f"{char}字，{result['analysis']['jixiong']}"
     })
+    print(f"[CEZI] 用户历史已保存")
     
     # 格式化输出
     verbose_text = format_verbose(result)
@@ -378,13 +419,18 @@ def cezi():
         "display_result": display_result,
         "openid": openid[:8] + "***"  # 脱敏处理
     })
+    print(f"[CEZI] 服务器历史已保存")
     
-    return jsonify({
+    response_data = {
         "success": True,
         "data": result,
         "verbose": verbose_text,
         "remaining": PLANS["monthly"]["days"] - user["daily_count"] if user["level"] == "free" else "无限"
-    })
+    }
+    print(f"[CEZI] ✅ 返回结果成功，数据大小: {len(str(response_data))} bytes")
+    print(f"[CEZI] ========== 测字请求结束 ==========")
+    
+    return jsonify(response_data)
 
 # ========== OCR API ==========
 
