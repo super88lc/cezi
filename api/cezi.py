@@ -226,13 +226,9 @@ def admin_page():
     try:
         with open(admin_path, 'r', encoding='utf-8') as f:
             content = f.read()
-            # 如果是重定向页面，直接返回内嵌的管理界面
-            if 'Redirecting' in content:
-                from admin.app import admin_html
-                return admin_html, 200, {'Content-Type': 'text/html'}
             return content, 200, {'Content-Type': 'text/html'}
     except Exception as e:
-        return f"Error: {str(e)}", 500
+        return f"Error loading admin page: {str(e)}", 500
 
 # ========== 测字API ==========
 

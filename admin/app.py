@@ -11,10 +11,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', 'admin.db')
-
-# 确保数据目录存在
-os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+# Vercel 无服务器环境使用 /tmp 目录
+DB_PATH = os.path.join('/tmp', 'admin.db')
 
 # 初始化数据库
 def init_db():
