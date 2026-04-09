@@ -6,6 +6,11 @@
 """
 
 import os
+import sys
+
+# 添加父目录到路径以导入本地模块（必须在其他导入之前）
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from dotenv import load_dotenv
 
 # 加载环境变量
@@ -20,9 +25,9 @@ QIANFAN_SECRET_KEY = os.getenv('QIANFAN_SECRET_KEY', '')
 try:
     from qianfan_client import QianfanClient, get_qianfan_deep_analysis
     QIANFAN_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     QIANFAN_AVAILABLE = False
-    print("⚠️ 千帆客户端不可用")
+    print(f"⚠️ 千帆客户端不可用: {e}")
 
 def get_minimax_deep_analysis(char, question, direction, time_info, analysis_data, meihua_data=None):
     """调用MiniMax进行深度个性化分析，返回(结果, prompt, 原始响应)"""
@@ -119,25 +124,20 @@ def get_minimax_deep_analysis(char, question, direction, time_info, analysis_dat
 
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-import os
 import json
 import time
 import random
 import string
 import hashlib
 import requests
-import sys
 
-# 添加父目录到路径以导入本地模块
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# 导入本地模块（sys.path已在文件顶部设置）
 from cezi_core_v3 import generate_enhanced_result, format_verbose
 
 app = Flask(__name__, template_folder='templates')
 CORS(app, resources={r"/api/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"]}}, supports_credentials=True)
 
 # ========== Admin后台管理 ==========
-import sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 try:
     from admin_routes import admin_bp
     app.register_blueprint(admin_bp)
