@@ -544,6 +544,15 @@ def user_history():
 
 # ========== 状态 ==========
 
+@app.route("/api/health", methods=["GET"])
+def health():
+    """健康检查端点"""
+    return jsonify({
+        "status": "ok",
+        "timestamp": time.time(),
+        "version": "1.0.0"
+    })
+
 @app.route("/api/status", methods=["GET"])
 def status():
     return jsonify({
