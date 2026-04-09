@@ -108,6 +108,10 @@ import random
 import string
 import hashlib
 import requests
+import sys
+
+# 添加当前目录到路径以导入本地模块
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cezi_core_v3 import generate_enhanced_result, format_verbose
 
 app = Flask(__name__, template_folder='templates')
