@@ -126,6 +126,10 @@ import random
 import string
 import hashlib
 import requests
+import sys
+
+# 添加父目录到路径以导入本地模块
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from cezi_core_v3 import generate_enhanced_result, format_verbose
 
 app = Flask(__name__, template_folder='templates')
@@ -263,7 +267,7 @@ def cezi():
     
     try:
         # 获取当前激活的模型配置
-        from data_manager import load_data
+        # 使用本模块中已定义的 load_data 函数
         admin_data = load_data()
         models = admin_data.get('models', [])
         active_model = None
@@ -564,7 +568,9 @@ if __name__ == "__main__":
     print(f"🔑 OCR: {'✅ 已配置' if BAIDU_API_KEY else '❌ 未配置'}")
     print(f"💰 支付: {'✅ 已配置' if WECHAT_MCH_ID else '❌ 未配置'}")
     print("=" * 50)
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # 获取端口，优先从环境变量读取，默认5000
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
 
 # Vercel handler - export app for Vercel
 # The app is already defined above as `app`

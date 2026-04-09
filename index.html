@@ -541,7 +541,12 @@
     <input type="file" id="fileInput" accept="image/*" capture="environment">
     
     <script>
-        const API_BASE = "https://1329596680-jvx4lf7wk9.ap-guangzhou.tencentscf.com";
+        // API基础地址配置
+        // 本地开发使用: http://localhost:5000
+        // 腾讯云部署使用: https://1329596680-jvx4lf7wk9.ap-guangzhou.tencentscf.com
+        const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? "http://localhost:5000" 
+            : "https://1329596680-jvx4lf7wk9.ap-guangzhou.tencentscf.com";
         let currentPage = 'home';
         let selectedQ = '';
         
