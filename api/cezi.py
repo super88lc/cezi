@@ -591,7 +591,9 @@ import json
 import datetime
 from flask import jsonify
 
-DATA_FILE = '/tmp/admin_data.json'
+# Vercel 无服务器环境使用 /tmp 目录（唯一可写目录）
+DATA_DIR = '/tmp'
+DATA_FILE = os.path.join(DATA_DIR, 'admin_data.json')
 DATA_KEY = 'cezi_admin_data'
 MAX_SERVER_HISTORY = 100  # 服务器端最多保留100条
 
@@ -840,11 +842,11 @@ def delete_history():
     if len(history) == original_count:
         return jsonify({'success': False, 'error': 'History not found'}), 404
     
-    # Save back
+    # Save back using load_data/save_data
     try:
-        file_path = os.path.join(DATA_DIR, 'history.json')
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(history, f, ensure_ascii=False, indent=2)
+        data = load_data()
+        data['server_history'] = history
+        save_data(data)
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -1003,14 +1005,8 @@ def get_active_prompt_template():
             return p.get('template')
     return None
 
-# Vercel 无服务器函数入口 - handler 函数
-# 使用 Flask 的 WSGI 应用处理请求
-try:
-    from vercel_wsgi import handle_wsgi
-    handler = handle_wsgi(app)
-except ImportError:
-    # 如果没有 vercel_wsgi，直接使用 app
-    handler = app
+# Vercel 无服务器函数入口 - 直接导出 Flask app
+# Vercel Python 运行时自动处理 WSGI 应用
 
 # 本地开发入口
 if __name__ == "__main__":

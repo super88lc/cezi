@@ -11,7 +11,8 @@ from datetime import datetime
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'data', 'admin.db')
+# Vercel 无服务器环境使用 /tmp 目录（唯一可写目录）
+DB_PATH = os.path.join('/tmp', 'admin.db')
 
 def get_db():
     """获取数据库连接"""
