@@ -993,3 +993,16 @@ def get_active_prompt_template():
         if p.get('is_active') == 1:
             return p.get('template')
     return None
+
+# Vercel 无服务器函数入口 - handler 函数
+# 使用 Flask 的 WSGI 应用处理请求
+try:
+    from vercel_wsgi import handle_wsgi
+    handler = handle_wsgi(app)
+except ImportError:
+    # 如果没有 vercel_wsgi，直接使用 app
+    handler = app
+
+# 本地开发入口
+if __name__ == "__main__":
+    app.run(debug=True)
