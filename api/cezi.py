@@ -232,6 +232,15 @@ def admin_page():
 
 # ========== 测字API ==========
 
+@app.route("/api/cezi", methods=["OPTIONS"])
+def cezi_options():
+    """处理CORS预检请求"""
+    response = app.make_response('')
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    return response
+
 @app.route("/api/cezi", methods=["POST"])
 def cezi():
     """测字接口"""
