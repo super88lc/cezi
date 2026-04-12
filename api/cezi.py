@@ -1047,8 +1047,11 @@ def get_active_prompt_template():
             return p.get('template')
     return None
 
-# Vercel 无服务器函数入口 - 直接导出 Flask app
+# Vercel 无服务器函数入口 - 导出 Flask app 供 Vercel 使用
 # Vercel Python 运行时自动处理 WSGI 应用
+
+# 重要：这是 Vercel 无服务器函数的入口点
+# 必须使用 'app' 变量名
 
 # 本地开发入口
 if __name__ == "__main__":

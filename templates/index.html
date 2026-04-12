@@ -565,7 +565,10 @@
     <input type="file" id="fileInput" accept="image/*" capture="environment">
     
     <script>
-        const API_BASE = "https://cezi.vercel.app";
+        // API 基础地址 - 自动适配本地开发和生产环境
+        const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+            ? "http://localhost:5000"  // 本地开发
+            : "https://cezi.vercel.app";  // 生产环境
         let currentPage = 'home';
         let selectedQ = '';
         
@@ -772,10 +775,16 @@
                 thinkingModal.style.display = 'none';
                 resultContent.style.display = 'block';
                 
-                if (data.data) {
+                // 检查API返回格式
+                if (data.success && data.data) {
                     showResult(data.data, question);
+                } else if (data.error) {
+                    // 服务器返回错误
+                    alert('服务器错误: ' + (data.error || data.message || '未知错误'));
+                    console.error('API Error:', data);
                 } else {
-                    alert(data.message || '测算失败');
+                    alert('测算失败: ' + (data.message || '请检查网络后重试'));
+                    console.error('Invalid response:', data);
                 }
             } catch (e) {
                 // 隐藏思考弹窗，显示更详细的错误信息
