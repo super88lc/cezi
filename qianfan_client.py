@@ -2,6 +2,10 @@
 """
 千帆(Qianfan) API 客户端
 用于测字算事的AI深度分析
+
+支持两种认证方式:
+1. OAuth 2.0 (Access Key + Secret Key) - 传统方式
+2. Bearer Token (API Key) - 新版 ERNIE API，直接使用
 """
 
 import os
@@ -12,17 +16,33 @@ from datetime import datetime
 class QianfanClient:
     """千帆API客户端"""
     
-    def __init__(self, access_key=None, secret_key=None):
+    def __init__(self, access_key=None, secret_key=None, api_key=None):
+        # 支持两种方式初始化
         self.access_key = access_key or os.getenv('QIANFAN_ACCESS_KEY', '')
         self.secret_key = secret_key or os.getenv('QIANFAN_SECRET_KEY', '')
-        self.model_name = 'ERNIE-4.0-8K'
-        self.endpoint = 'https://qianfan.baidubce.com/v2'
+        
+        # 新版 ERNIE API Key (Bearer Token 方式)
+        self.api_key = api_key or os.getenv('ERNIE_API_KEY', '') or os.getenv('QIANFAN_API_KEY', '')
+        
+        self.model_name = os.getenv('QIANFAN_MODEL_NAME', 'ERNIE-4.0-8K')
         self.access_token = None
         
+        # 判断使用哪种认证方式
+        self.use_bearer = bool(self.api_key)
+        if self.use_bearer:
+            print(f"[QianfanClient] 使用 Bearer Token 认证 (API Key)")
+        elif self.access_key and self.secret_key:
+            print(f"[QianfanClient] 使用 OAuth 2.0 认证 (Access Key + Secret Key)")
+        else:
+            print(f"[QianfanClient] ⚠️ 未配置任何认证方式")
+        
     def get_access_token(self):
-        """获取百度千帆access_token"""
+        """获取百度千帆access_token (OAuth方式)"""
         if self.access_token:
             return self.access_token
+            
+        if not self.access_key or not self.secret_key:
+            return None
             
         url = f"https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id={self.access_key}&client_secret={self.secret_key}"
         
@@ -32,13 +52,67 @@ class QianfanClient:
                 result = response.json()
                 self.access_token = result.get('access_token')
                 return self.access_token
+            else:
+                print(f"[QianfanClient] 获取token失败: {response.status_code} - {response.text[:200]}")
         except Exception as e:
-            print(f"获取千帆token失败: {e}")
+            print(f"[QianfanClient] 获取token异常: {e}")
         
         return None
     
     def chat(self, messages, max_tokens=600, temperature=0.7):
         """调用千帆对话API"""
+        
+        # 使用 Bearer Token 方式 (新版 ERNIE API)
+        if self.use_bearer:
+            return self._chat_bearer(messages, max_tokens, temperature)
+        
+        # 使用 OAuth 2.0 方式 (传统方式)
+        return self._chat_oauth(messages, max_tokens, temperature)
+    
+    def _chat_bearer(self, messages, max_tokens=600, temperature=0.7):
+        """使用 Bearer Token 调用 ERNIE API (OpenAI兼容格式)"""
+        
+        base_url = "https://qianfan.baidubce.com/v2"
+        url = f"{base_url}/chat/completions"
+        
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}"
+        }
+        
+        # OpenAI 兼容格式
+        payload = {
+            "model": self.model_name,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens
+        }
+        
+        try:
+            print(f"[QianfanClient] 发送 Bearer Token 请求到 {url}")
+            response = requests.post(url, headers=headers, json=payload, timeout=45)
+            raw_response = response.text
+            
+            if response.status_code == 200:
+                result = response.json()
+                choices = result.get("choices", [])
+                if choices:
+                    content = choices[0].get("message", {}).get("content", "")
+                    return content, raw_response
+                return None, f"API响应格式错误: {raw_response[:200]}"
+            else:
+                error_msg = f"HTTP错误 {response.status_code}: {raw_response[:200]}"
+                print(f"[QianfanClient] {error_msg}")
+                return None, error_msg
+                
+        except Exception as e:
+            error_msg = f"请求异常: {e}"
+            print(f"[QianfanClient] {error_msg}")
+            return None, error_msg
+    
+    def _chat_oauth(self, messages, max_tokens=600, temperature=0.7):
+        """使用 OAuth 2.0 调用千帆 API (传统方式)"""
+        
         token = self.get_access_token()
         if not token:
             return None, "无法获取access_token"
@@ -131,7 +205,7 @@ def get_qianfan_deep_analysis(char, question, direction, time_info, analysis_dat
 【风格要求】
 - 文言文为主，夹杂白话解释
 - 如古代算命先生语气
-- 语气温和但有自信
+- 语温和但有自信
 - 结论明确，不要模棱两可"""
 
     try:
@@ -154,7 +228,27 @@ def get_qianfan_deep_analysis(char, question, direction, time_info, analysis_dat
 # 测试代码
 if __name__ == "__main__":
     print("千帆客户端模块加载成功")
-    # 测试客户端初始化
-    client = QianfanClient()
-    print(f"Access Key: {client.access_key[:10] if client.access_key else '未设置'}...")
-    print(f"Model: {client.model_name}")
+    
+    # 检查认证方式
+    api_key = os.getenv('ERNIE_API_KEY', '') or os.getenv('QIANFAN_API_KEY', '')
+    access_key = os.getenv('QIANFAN_ACCESS_KEY', '')
+    secret_key = os.getenv('QIANFAN_SECRET_KEY', '')
+    
+    if api_key:
+        print(f"✅ 使用 Bearer Token 方式 (API Key: {api_key[:20]}...)")
+        client = QianfanClient(api_key=api_key)
+        # 测试调用
+        messages = [{"role": "user", "content": "你好，请简单介绍一下自己"}]
+        result, raw = client.chat(messages)
+        if result:
+            print(f"✅ 测试成功: {result[:100]}...")
+        else:
+            print(f"❌ 测试失败: {raw}")
+    elif access_key and secret_key:
+        print(f"✅ 使用 OAuth 2.0 方式 (Access Key: {access_key[:20]}...)")
+    else:
+        print("⚠️ 未配置任何 API Key")
+        print("请设置以下环境变量之一:")
+        print("  - ERNIE_API_KEY (推荐，Bearer Token方式)")
+        print("  - QIANFAN_API_KEY")
+        print("  - QIANFAN_ACCESS_KEY + QIANFAN_SECRET_KEY")
