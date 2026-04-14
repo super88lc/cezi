@@ -24,14 +24,21 @@ QIANFAN_SECRET_KEY = os.getenv('QIANFAN_SECRET_KEY', '')
 # 支持 QIANFAN_API_KEY 格式（自动拆分 access_key 和 secret_key）
 # 格式: bce-v3/ALTAK-xxxxx/xxxxx 或 bce-v3/xxxxx/xxxxx
 QIANFAN_API_KEY = os.getenv('QIANFAN_API_KEY', '')
-if QIANFAN_API_KEY and (not QIANFAN_ACCESS_KEY or not QIANFAN_SECRET_KEY):
-    # 解析格式: bce-v3/ALTAK-xxxxx/xxxxx 或 bce-v3/xxxxx/xxxxx
+if QIANFAN_API_KEY:
+    # 优先从 QIANFAN_API_KEY 解析（如果存在）
     parts = QIANFAN_API_KEY.split('/')
     if len(parts) >= 3:
         # parts[0] = 'bce-v3', parts[1] = 'ALTAK-xxxxx', parts[2] = 'xxxxx'
         QIANFAN_ACCESS_KEY = parts[1]
         QIANFAN_SECRET_KEY = parts[2]
+        # 设置到环境变量，供 qianfan_client.py 读取
+        os.environ['QIANFAN_ACCESS_KEY'] = QIANFAN_ACCESS_KEY
+        os.environ['QIANFAN_SECRET_KEY'] = QIANFAN_SECRET_KEY
         print(f"[CEZI] 已从 QIANFAN_API_KEY 解析出 Access Key 和 Secret Key")
+
+# 打印调试信息（仅显示前10字符）
+print(f"[CEZI] QIANFAN_ACCESS_KEY: {'已设置' if QIANFAN_ACCESS_KEY else '未设置'} ({QIANFAN_ACCESS_KEY[:10]}..." if QIANFAN_ACCESS_KEY else "[CEZI] QIANFAN_ACCESS_KEY: 未设置")
+print(f"[CEZI] QIANFAN_SECRET_KEY: {'已设置' if QIANFAN_SECRET_KEY else '未设置'}")
 
 # 导入千帆客户端
 try:
