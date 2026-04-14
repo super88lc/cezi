@@ -21,6 +21,18 @@ MINIMAX_API_KEY = os.getenv('MINIMAX_API_KEY', '')
 QIANFAN_ACCESS_KEY = os.getenv('QIANFAN_ACCESS_KEY', '')
 QIANFAN_SECRET_KEY = os.getenv('QIANFAN_SECRET_KEY', '')
 
+# 支持 QIANFAN_API_KEY 格式（自动拆分 access_key 和 secret_key）
+# 格式: bce-v3/ALTAK-xxxxx/xxxxx 或 bce-v3/xxxxx/xxxxx
+QIANFAN_API_KEY = os.getenv('QIANFAN_API_KEY', '')
+if QIANFAN_API_KEY and (not QIANFAN_ACCESS_KEY or not QIANFAN_SECRET_KEY):
+    # 解析格式: bce-v3/ALTAK-xxxxx/xxxxx 或 bce-v3/xxxxx/xxxxx
+    parts = QIANFAN_API_KEY.split('/')
+    if len(parts) >= 3:
+        # parts[0] = 'bce-v3', parts[1] = 'ALTAK-xxxxx', parts[2] = 'xxxxx'
+        QIANFAN_ACCESS_KEY = parts[1]
+        QIANFAN_SECRET_KEY = parts[2]
+        print(f"[CEZI] 已从 QIANFAN_API_KEY 解析出 Access Key 和 Secret Key")
+
 # 导入千帆客户端
 try:
     from qianfan_client import QianfanClient, get_qianfan_deep_analysis
