@@ -1062,6 +1062,61 @@ def get_active_prompt_template():
 # 重要：这是 Vercel 无服务器函数的入口点
 # 必须使用 'app' 变量名
 
+# Vercel 无服务器函数入口
+# 使用标准 WSGI 接口
+try:
+    from werkzeug.wrappers import Request as WerkzeugRequest
+    from io import BytesIO
+    
+    def handler(request, context=None):
+        """Vercel 无服务器函数入口"""
+        # 构建 WSGI environ
+        environ = {
+            'REQUEST_METHOD': request.get('method', 'GET'),
+            'PATH_INFO': request.get('path', '/'),
+            'QUERY_STRING': request.get('query', ''),
+            'SERVER_NAME': 'vercel',
+            'SERVER_PORT': '443',
+            'HTTP_HOST': request.get('headers', {}).get('host', 'cezi.vercel.app'),
+            'wsgi.url_scheme': 'https',
+            'wsgi.input': BytesIO(request.get('body', '').encode()),
+            'wsgi.errors': BytesIO(),
+            'wsgi.version': (1, 0),
+            'wsgi.run_once': True,
+            'wsgi.multithread': False,
+            'wsgi.multiprocess': False,
+        }
+        
+        # 添加 headers
+        for key, value in request.get('headers', {}).items():
+            key = key.upper().replace('-', '_')
+            if key not in ('CONTENT_TYPE', 'CONTENT_LENGTH'):
+                key = 'HTTP_' + key
+            environ[key] = value
+        
+        # 调用 Flask WSGI app
+        response_data = {}
+        
+        def start_response(status, headers):
+            response_data['status'] = int(status.split(' ')[0])
+            response_data['headers'] = dict(headers)
+        
+        body = app(environ, start_response)
+        response_body = b''.join(body)
+        
+        return {
+            'statusCode': response_data.get('status', 200),
+            'headers': response_data.get('headers', {}),
+            'body': response_body.decode('utf-8')
+        }
+except ImportError:
+    # 如果 werkzeug 不可用，使用简单代理
+    def handler(request, context=None):
+        return {
+            'statusCode': 500,
+            'body': 'Server configuration error'
+        }
+
 # 本地开发入口
 if __name__ == "__main__":
     app.run(debug=True)
