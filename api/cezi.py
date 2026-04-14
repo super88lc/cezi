@@ -16,36 +16,23 @@ from dotenv import load_dotenv
 # 加载环境变量
 load_dotenv()
 
-# API Keys 从环境变量读取
+# API Keys 从环境变量读取 - 与 Newsletter 保持一致
 MINIMAX_API_KEY = os.getenv('MINIMAX_API_KEY', '')
-QIANFAN_ACCESS_KEY = os.getenv('QIANFAN_ACCESS_KEY', '')
-QIANFAN_SECRET_KEY = os.getenv('QIANFAN_SECRET_KEY', '')
 
-# 支持 ERNIE_API_KEY (推荐) - Bearer Token 方式，直接使用
+# 百度/千帆 API - 与 Newsletter 保持一致的使用方式
+# 优先使用 ERNIE_API_KEY，其次使用 BAIDU_API_KEY
+BAIDU_API_KEY = os.getenv('BAIDU_API_KEY', '')
 ERNIE_API_KEY = os.getenv('ERNIE_API_KEY', '')
+
+# 设置到环境变量供 qianfan_client.py 读取
 if ERNIE_API_KEY:
     os.environ['ERNIE_API_KEY'] = ERNIE_API_KEY
-    print(f"[CEZI] ✅ 已加载 ERNIE_API_KEY (Bearer Token 方式)")
-
-# 支持 QIANFAN_API_KEY 格式（自动拆分 access_key 和 secret_key）
-# 格式: bce-v3/ALTAK-xxxxx/xxxxx 或 bce-v3/xxxxx/xxxxx
-QIANFAN_API_KEY = os.getenv('QIANFAN_API_KEY', '')
-if QIANFAN_API_KEY and not ERNIE_API_KEY:  # 如果没有 ERNIE_API_KEY 才解析
-    parts = QIANFAN_API_KEY.split('/')
-    if len(parts) >= 3:
-        QIANFAN_ACCESS_KEY = parts[1]
-        QIANFAN_SECRET_KEY = parts[2]
-        os.environ['QIANFAN_ACCESS_KEY'] = QIANFAN_ACCESS_KEY
-        os.environ['QIANFAN_SECRET_KEY'] = QIANFAN_SECRET_KEY
-        print(f"[CEZI] 已从 QIANFAN_API_KEY 解析出 Access Key 和 Secret Key")
-
-# 打印调试信息
-if ERNIE_API_KEY:
-    print(f"[CEZI] 使用 ERNIE_API_KEY (Bearer Token): {ERNIE_API_KEY[:15]}...")
-elif QIANFAN_ACCESS_KEY and QIANFAN_SECRET_KEY:
-    print(f"[CEZI] 使用 OAuth 2.0: Access Key 已设置")
+    print(f"[CEZI] ✅ 使用 ERNIE_API_KEY")
+elif BAIDU_API_KEY:
+    os.environ['BAIDU_API_KEY'] = BAIDU_API_KEY
+    print(f"[CEZI] ✅ 使用 BAIDU_API_KEY")
 else:
-    print(f"[CEZI] ⚠️ 未配置千帆 API Key")
+    print(f"[CEZI] ⚠️ 未配置百度 API Key (BAIDU_API_KEY 或 ERNIE_API_KEY)")
 
 # 导入千帆客户端
 try:
@@ -351,19 +338,22 @@ def cezi():
             print(f"[CEZI] 使用 provider: {provider}")
             
             if provider == 'qianfan' and QIANFAN_AVAILABLE:
-                # 使用千帆模型
-                access_key = active_model.get('access_key') or QIANFAN_ACCESS_KEY
-                secret_key = active_model.get('secret_key') or QIANFAN_SECRET_KEY
-                print(f"[CEZI] 千帆密钥是否存在: access={bool(access_key)}, secret={bool(secret_key)}")
+                # 使用千帆模型 - 与 Newsletter 一致: 使用 BAIDU_API_KEY 或 ERNIE_API_KEY
+                api_key = ERNIE_API_KEY if ERNIE_API_KEY else BAIDU_API_KEY
+                print(f"[CEZI] 千帆 API Key 是否设置: {bool(api_key)}")
                 
-                if access_key and secret_key:
+                if api_key:
                     print(f"[CEZI] 调用千帆 API...")
                     from qianfan_client import QianfanClient
-                    client = QianfanClient(access_key=access_key, secret_key=secret_key)
+                    client = QianfanClient(api_key=api_key)
                     
-                    model_name = active_model.get('model_name', 'ERNIE-4.0-8K')
-                    if model_name:
-                        client.model_name = model_name
+                    # 使用模型配置或默认模型
+                    if active_model and active_model.get('model_name'):
+                        client.model_name = active_model.get('model_name')
+                    elif ERNIE_API_KEY:
+                        client.model_name = os.getenv('ERNIE_MODEL', 'ernie-4.0-8k-latest')
+                    else:
+                        client.model_name = os.getenv('BAIDU_MODEL', 'qianfan-code-latest')
                     
                     deep_analysis, llm_prompt, llm_response = get_qianfan_deep_analysis(
                         char, 
@@ -769,14 +759,14 @@ def init_admin_data():
         now = datetime.datetime.now().isoformat()
         data['models'] = [
             {
-                "id": 1, "name": "MiniMax", "provider": "minimax", "api_key": "", 
+                "id": 1, "name": "MiniMax", "provider": "minimax", "api_key": "",
                 "endpoint": "https://api.minimaxi.com/anthropic/v1", "model_name": "MiniMax-M2.5",
                 "is_active": 0, "created_at": now, "updated_at": now
             },
             {
                 "id": 2, "name": "千帆ERNIE-4.0", "provider": "qianfan",
-                "access_key": "", "secret_key": "",
-                "endpoint": "https://qianfan.baidubce.com/v2", "model_name": "ERNIE-4.0-8K",
+                "api_key": "",  # 使用环境变量 BAIDU_API_KEY 或 ERNIE_API_KEY
+                "endpoint": "https://qianfan.baidubce.com/v2", "model_name": "ernie-4.0-8k-latest",
                 "is_active": 1, "created_at": now, "updated_at": now
             }
         ]
